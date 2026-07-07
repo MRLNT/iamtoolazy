@@ -1,0 +1,20 @@
+{
+  "name": "@iamtoolazy/core",
+  "version": "0.2.0",
+  "description": "Shared engine: PCTF prompt refiner, prompt compressor, token estimator, adaptive injector, thread distiller. Runs in Node and the browser.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "gpt-tokenizer": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
