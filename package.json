@@ -1,6 +1,6 @@
 {
   "name": "iamtoolazy",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "Too lazy to waste tokens. Save input, output, and media tokens on Claude, ChatGPT, Gemini \u2014 web chat and CLI.",
   "type": "module",
@@ -9,10 +9,16 @@
   ],
   "scripts": {
     "test": "node --test packages/core/test/*.test.js",
-    "demo": "node scripts/demo.js"
+    "demo": "node scripts/demo.js",
+    "sync:cli": "node scripts/sync-cli-core.mjs",
+    "lint": "eslint packages/*/src packages/*/hooks scripts"
   },
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.6.0"
+  }
 }
