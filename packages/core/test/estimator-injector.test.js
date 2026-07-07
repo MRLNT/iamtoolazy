@@ -71,3 +71,33 @@ test('pipeline: trivial prompt passes through nearly untouched', () => {
   assert.equal(r.injection.inject, false);
   assert.match(r.output, /HTTP\/3/);
 });
+
+// --- injector v2 (research-backed) ---
+
+test('v2: reasoning prompts get Chain of Draft, not fragment-terse', () => {
+  const d = decideInjection('Calculate the probability of getting exactly 3 heads in 5 coin flips and prove the formula.');
+  assert.equal(d.classification.type, 'reasoning');
+  assert.equal(d.inject, true);
+  assert.match(d.directive, /####/);
+  assert.ok(!/ultra-terse/i.test(d.directive));
+});
+
+test('v2: writing prompts get budget only (brevity relaxed for prose)', () => {
+  const d = decideInjection('Write a detailed, comprehensive essay about the history of tea ceremonies in Japan.');
+  assert.equal(d.inject, true);
+  assert.ok(!/ultra-terse/i.test(d.directive));
+  assert.match(d.directive, /Answer in \u2264\d+ tokens/);
+});
+
+test('v2: budget respects the token-elasticity guard (never below 50% of expected)', () => {
+  const d = decideInjection('Implement a REST API endpoint with detailed error handling and refactor the schema step-by-step.');
+  assert.ok(d.budgetTokens >= Math.round(d.classification.expectedTokens * 0.5) - 1);
+  assert.ok(d.budgetTokens >= 120);
+  assert.match(d.directive, new RegExp(`\u2264${d.budgetTokens} tokens`));
+});
+
+test('v2: Indonesian prompts get Indonesian budget line', () => {
+  const d = decideInjection('Hitunglah peluang muncul angka genap dua kali dari tiga lemparan dadu, jelaskan langkahnya.');
+  assert.equal(d.inject, true);
+  assert.match(d.directive, /Jawab dalam \u2264\d+ token/);
+});
