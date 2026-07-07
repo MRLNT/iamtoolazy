@@ -1,6 +1,6 @@
 {
   "name": "@iamtoolazy/core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Shared engine: PCTF prompt refiner, prompt compressor, token estimator, adaptive injector, thread distiller. Runs in Node and the browser.",
   "type": "module",
   "main": "src/index.js",
@@ -16,5 +16,29 @@
   "engines": {
     "node": ">=18"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MRLNT/iamtoolazy.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/MRLNT/iamtoolazy",
+  "bugs": "https://github.com/MRLNT/iamtoolazy/issues",
+  "keywords": [
+    "tokens",
+    "llm",
+    "prompt-compression",
+    "efficiency",
+    "claude",
+    "chatgpt",
+    "gemini",
+    "yagni"
+  ],
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
 }
