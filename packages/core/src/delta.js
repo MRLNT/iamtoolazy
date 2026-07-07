@@ -67,6 +67,7 @@ export function deltaCompress(prompt, history, opts = {}) {
 
   rawSentences.forEach((sentence, i) => {
     const maskedS = maskedSentences[i] ?? sentence;
+    // eslint-disable-next-line no-control-regex -- \u0000 placeholders are intentional
     const hasProtected = /\u0000\d+\u0000/.test(maskedS);
     const words = contentWords(sentence);
     const numbers = sentence.match(/\d[\d.,]*/g) || [];

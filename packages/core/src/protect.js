@@ -40,5 +40,6 @@ export function mask(text) {
  * @returns {string}
  */
 export function unmask(masked, spans) {
+  // eslint-disable-next-line no-control-regex -- \u0000 placeholders are intentional
   return masked.replace(/\u0000(\d+)\u0000/g, (_, i) => spans[Number(i)]);
 }
