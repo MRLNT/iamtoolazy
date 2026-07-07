@@ -44,6 +44,10 @@ const WRITING_HINTS =
 const ANALYSIS_HINTS =
   /\b(?:analy[sz]e|compare|evaluate|assess|pros and cons|trade-?offs?|analisis|bandingkan|evaluasi|kelebihan dan kekurangan|kaji)\b/i;
 
+// Math/logic problems: Chain-of-Draft territory [Xu et al., arXiv:2502.18600]
+const REASONING_HINTS =
+  /\b(?:calculate|compute|solve|prove|probability|equation|derivative|integral|how (?:many|much)|hitung(?:lah)?|berapa banyak|persamaan|peluang|buktikan|logika)\b|\d\s*[+\-*/×÷^]\s*\d/i;
+
 // Deliberately narrow: bare "short"/"quick" misfire on "short comments",
 // "quick sort" — they describe the artifact, not the response length.
 const BRIEF_HINTS = /\b(?:brief(?:ly)?|concise(?:ly)?|tl;?dr|one[- ]liner|in (?:a|one) sentence|singkat|ringkas|sekilas)\b/i;
@@ -108,7 +112,7 @@ export function extract(text, lang = detectLang(text)) {
  * Classify the prompt to predict response shape. Used by the adaptive
  * injector and by the CLI skill to decide when YAGNI mode should wake up.
  * @param {string} text
- * @returns {{type: 'coding'|'writing'|'analysis'|'qa'|'other',
+ * @returns {{type: 'coding'|'reasoning'|'writing'|'analysis'|'qa'|'other',
  *            expectedTokens: number, lang: 'id'|'en'}}
  */
 export function classify(text) {
@@ -118,13 +122,14 @@ export function classify(text) {
 
   let type = 'other';
   if (hasCode || CODING_HINTS.test(t)) type = 'coding';
+  else if (REASONING_HINTS.test(t)) type = 'reasoning';
   else if (ANALYSIS_HINTS.test(t)) type = 'analysis';
   else if (WRITING_HINTS.test(t)) type = 'writing';
   else if (/^\s*(?:what|why|how|when|where|which|who|is|are|do|does|can|apa(?:kah)?|kenapa|mengapa|bagaimana|kapan|dimana|di mana|siapa|berapa)\b/i.test(t) || /\?\s*$/.test(t)) {
     type = 'qa';
   }
 
-  const BASE = { coding: 700, analysis: 500, writing: 600, qa: 250, other: 350 };
+  const BASE = { coding: 700, reasoning: 400, analysis: 500, writing: 600, qa: 250, other: 350 };
   let expected = BASE[type];
   if (BRIEF_HINTS.test(t)) expected = Math.round(expected * 0.4);
   if (DETAIL_HINTS.test(t)) expected = Math.round(expected * 1.8);
