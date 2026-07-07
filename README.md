@@ -1,131 +1,129 @@
-# iamtoolazy
+# 🦥 iamtoolazy
 
-> Too lazy to waste tokens.
+> Too lazy to waste tokens. So lazy, it even skips itself when that's cheaper.
+
+[![ci](https://github.com/MRLNT/iamtoolazy/actions/workflows/ci.yml/badge.svg)](https://github.com/MRLNT/iamtoolazy/actions)
+[![release](https://img.shields.io/github/v/release/MRLNT/iamtoolazy)](https://github.com/MRLNT/iamtoolazy/releases)
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)](package.json)
+
+![iamtoolazy demo](assets/demo.gif)
 
 Save input, output, **and** media tokens on Claude, ChatGPT, and Gemini —
-in web chat *and* in CLI agents. Free, open source, local-first, MIT.
+with honest numbers, zero telemetry, and a method that only acts when
+acting is cheaper than doing nothing. Works in English and Indonesian.
+
+## Which one do I install?
+
+| You are… | Install | Status |
+|---|---|---|
+| **A Claude Code user** | The plugin — 2 commands, ~30 seconds, below ⬇️ | ✅ **available now** |
+| **A claude.ai / ChatGPT / Gemini web user** | The browser extension | 🔜 Fase 3 — ⭐ star to get notified |
+| **A JS developer** | `npm i @iamtoolazy/core` library | ✅ available now |
+
+That's it. One repo, three doors, pick yours.
+
+## Install the Claude Code plugin
+
+Inside any Claude Code session:
+
+```
+/plugin marketplace add MRLNT/iamtoolazy
+/plugin install iamtoolazy@iamtoolazy
+```
+
+Restart when prompted. From now on:
+
+- Every prompt is classified on your machine (coding / reasoning / prose / q&a)
+- A tiny directive is attached **only when predicted savings beat its cost**
+  — short questions cost exactly **zero**
+- Reasoning gets [Chain-of-Draft](https://arxiv.org/abs/2502.18600), coding
+  gets the YAGNI ladder, everything except prose gets a token budget with
+  an elasticity floor ([TALE](https://arxiv.org/abs/2412.18547))
+- A Stop hook measures real response lengths and calibrates future
+  decisions to *your* usage — all data stays in `~/.iamtoolazy/`
+
+Commands: `/lazy on|off|lite|full|ultra` · `/lazy-refine <prompt>` ·
+`/lazy-compress [file]` · `/lazy-stats` · `/lazy-review`. Full details in
+[packages/cli](packages/cli/README.md). Uninstall anytime with
+`/plugin uninstall iamtoolazy@iamtoolazy`.
 
 ## Why another token saver?
 
 [caveman](https://github.com/JuliusBrussee/caveman) proved terse output
-works. [ponytail](https://github.com/DietrichGebert/ponytail) proved minimal
-code works. Both are great — and both leave the biggest pools untouched:
+works. [ponytail](https://github.com/DietrichGebert/ponytail) proved
+minimal code works. Both are static policies — and both leave the biggest
+pools untouched:
 
 | Token pool | caveman | ponytail | **iamtoolazy** |
 |---|---|---|---|
 | Output prose | ✅ | — | ✅ adaptive (only when net-positive) |
-| Generated code | — | ✅ | ✅ YAGNI, auto-wakes on coding tasks only |
+| Generated code | — | ✅ | ✅ YAGNI, wakes on coding tasks only |
 | **Your prompts** (re-sent every turn) | — | — | ✅ compress + PCTF refine |
-| **Media** (images, PDFs) | — | — | ✅ downscale / local text extraction |
-| **Thread history** | partial (memory files) | — | ✅ distiller + context health |
-| Web chat (claude.ai / ChatGPT / Gemini) | — | — | ✅ browser extension |
+| **Media** (images, PDFs) | — | — | 🔜 Fase 3: downscale / local text extraction |
+| **Thread history** | partial | — | ✅ distiller + delta-context compression |
+| Web chat (claude.ai / ChatGPT / Gemini) | — | — | 🔜 Fase 3 extension |
 | Retry prevention | — | — | ✅ PCTF: Persona · Context · Task · Constraints · Format |
-| Net-negative guard | ⚠️ ~1–1.5k tok/turn overhead | ⚠️ deliberation cost on terse models | ✅ injects only if predicted savings > overhead |
-
-The philosophy: **fix their weaknesses, keep their strengths, then attack
-the pools neither of them touches.** And publish honest numbers from day
-one — see [docs/honest-numbers.md](docs/honest-numbers.md).
-
-## How it works (auto mode)
-
-```
-your prompt
-  → compress   strip greetings/filler/closers — style only, never meaning,
-               never code/URLs/quotes (byte-preserved), never translated
-  → refine     restructure into PCTF so the model nails it in one shot
-               (the retry you prevent is worth ~2–3k tokens)
-  → inject     tiny terse/YAGNI directive, ONLY when predicted output
-               savings beat the overhead — short question costs zero
-  → preview    you see the diff before anything is sent (default on)
-```
-
-Works in English and Indonesian out of the box; compression adapts to your
-language, it never translates.
+| Net-negative guard | ⚠️ ~1–1.5k tok/turn overhead | ⚠️ deliberation cost | ✅ skips itself, with the reason logged |
+| Learns your usage | — | — | ✅ LAZY on-device calibration |
 
 ## The LAZY method
 
-iamtoolazy's original contribution (reference implementation shipped,
-validation in Fase 4 — draft: [docs/paper/lazy-method.md](docs/paper/lazy-method.md)):
+Our original contribution (reference implementation shipped; validation in
+Fase 4 — draft: [docs/paper/lazy-method.md](docs/paper/lazy-method.md)):
 
 - **Learn** — measure the actual token cost of every response, on-device
-- **Adapt** — calibrate the injection policy per user and task class
-  (EWMA), replacing universal constants with your measured reality
-- **Zero-waste** — delta-context compression: never re-send what the
-  visible conversation already established (safety-railed, reversible)
-- **Yield** — an honest ledger: input deltas shown, skip reasons named,
-  realized savings tracked, zero telemetry
+- **Adapt** — calibrate the injection policy per user and task class (EWMA)
+- **Zero-waste** — never re-send what the conversation already established
+- **Yield** — an honest ledger: input deltas shown, skip reasons named
 
-## Status
-
-**Fase 1 — core engine: ✅ · v0.2.0 adds the LAZY reference implementation**
-
-```
-packages/core        the shared engine (Node ≥18 + browser, ESM)
-  compressor         input-side caveman, 3 levels, removal log for diffs
-  refiner            local PCTF extractor + task classifier (id/en)
-  estimator          gpt-tokenizer when available, honest fallbacks,
-                     vision-token math for images
-  injector           adaptive terse/YAGNI directives with skip reasons
-  delta              LAZY zero-waste: history-aware prompt dedup
-  calibrator         LAZY learn/adapt: on-device policy calibration
-  distiller          thread → compact brief templates
-  llm                optional BYOK refine pass (Anthropic/OpenAI/Gemini)
-  pipeline           processPrompt() = the whole auto mode in one call
-```
-
-33 tests. See [CHANGELOG.md](CHANGELOG.md).
-
-- **Fase 2** — `packages/cli`: Claude Code / Codex plugin (skill + slash
-  commands + memory-file compression + stats)
-- **Fase 3** — `packages/extension`: MV3 extension for claude.ai /
-  chatgpt.com / gemini.google.com (auto mode, preview diff, media
-  optimizer, distiller, onboarding wizard, BYOK, dashboard)
-- **Fase 4** — reproducible benchmarks + release polish
-
-## Quick start (core)
+## Library quick start
 
 ```bash
-npm install && npm test && npm run demo
+npm i @iamtoolazy/core
 ```
 
 ```js
 import { processPrompt, initTokenizer } from '@iamtoolazy/core';
 
-await initTokenizer(); // optional: real token counts instead of heuristic
-
+await initTokenizer(); // optional: real token counts instead of chars/4
 const r = processPrompt(
-  'Hi! Could you please implement a login function with rate limiting in Node? ' +
-  'I am building a small internal app. Avoid external auth providers. ' +
-  'Show the code with short comments. Thanks!'
+  'Hi! Could you please implement login with rate limiting? ' +
+  'I am building a small app. Avoid external providers. Thanks!'
 );
-
-r.output;             // compressed + PCTF-structured + directive attached
-r.tokens.predictedNet // honest ledger: savings minus what we added
-r.injection.reason    // why the directive was (or wasn't) attached
+r.output;                 // compressed + PCTF-structured + directive attached
+r.tokens.predictedNet;    // the honest ledger
+r.injection.reason;       // why it did (or didn't) act
 ```
 
-Every stage is independently toggleable — that's what the install wizard
-will expose in Fase 3:
+Every stage is independently toggleable: `compress` (lite/full/ultra),
+`refine` (auto/structure/tighten), `inject` (terse/CoD/YAGNI/budget),
+`history` (delta-context), `calibration`.
 
-```js
-processPrompt(text, {
-  compress: true,  compressLevel: 'full',   // lite | full | ultra
-  refine: true,    refineMode: 'auto',      // auto | structure | tighten
-  inject: true,    enableYagni: true,
-  provider: 'claude',                       // openai | claude | generic
-});
+## Status
+
+- **Fase 1–2 ✅** — core engine + LAZY reference implementation + Claude
+  Code plugin + CI + community docs (`v0.3.0`, 37 tests)
+- **Fase 3 🔜** — browser extension (MV3): auto mode with preview diff,
+  image downscale, PDF→text, thread distiller, onboarding wizard
+- **Fase 4** — reproducible benchmarks vs caveman / ponytail / a one-line
+  "be brief" — plus the LAZY ablation study and paper finalization
+- **Fase 5** — LLMLingua-2 local Smart Compress, community language packs,
+  TypeScript declarations
+
+Full roadmap: [docs/roadmap.md](docs/roadmap.md)
+
+## Honest numbers, or it didn't happen
+
+Every count in our UI is labeled an estimate. Input overhead is shown,
+never hidden. Predictions use the *low* end of community re-benchmarks.
+No benchmark, no claim. The whole policy: [docs/honest-numbers.md](docs/honest-numbers.md)
+
 ```
-
-## Principles
-
-1. **Local-first.** Rules run on your machine. The LLM refine pass is
-   opt-in, BYOK, and off by default.
-2. **Zero telemetry.** No accounts, no analytics, no phone home.
-3. **Meaning-safe.** Negations are structurally impossible to remove; code,
-   URLs, paths, and quotes are byte-preserved; language is never translated.
-4. **Honest numbers.** Estimates labeled as estimates, overhead shown, the
-   conservative end of benchmarks used for predictions. No benchmark, no claim.
-5. **Lazy by example.** The codebase practices the YAGNI it preaches.
+        (\_/)
+        (-.-) zzz     ← the mascot, conserving tokens
+       c(")(")
+```
 
 ## Credits
 
@@ -137,4 +135,4 @@ the pools they don't cover.
 
 ## License
 
-MIT
+MIT. Made with minimal effort, *by design*.
