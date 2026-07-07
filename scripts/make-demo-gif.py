@@ -3,7 +3,7 @@
 # iamtoolazy's actual behavior. No external assets, no copyright issues.
 from PIL import Image, ImageDraw, ImageFont
 
-W, H, PAD, LH = 780, 400, 22, 24
+W, H, PAD, LH = 780, 508, 22, 24
 BG = (13, 17, 23)
 FG = (201, 209, 217)
 DIM = (110, 118, 129)
@@ -19,7 +19,7 @@ LINES = [
     ('  "Hi! Could you please maybe fix this bug for me', FG, False),
     ('   when you get a chance? Thanks so much in advance!!"', FG, False),
     ("", FG, False),
-    ("lazy> compress   \"Fix this bug.\"              (-83% chars)", GREEN, True),
+    ("lazy> compress   \"Fix this bug.\"              (-87% chars)", GREEN, True),
     ("lazy> inject     skipped — short task, would cost more", DIM, False),
     ("lazy>            than it saves. 0 tokens wasted.", DIM, False),
     ("", FG, False),
