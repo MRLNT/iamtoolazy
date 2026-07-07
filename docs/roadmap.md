@@ -13,7 +13,7 @@ implementation — Delta-Context Compression (`delta.js`) + Self-Calibrating
 Injection (`calibrator.js`), pipeline/injector wiring, method draft in
 `docs/paper/lazy-method.md`, 33 tests.
 
-## Fase 2 — CLI plugin + Injector v2 + repo hygiene
+## Fase 2 — CLI plugin + Injector v2 + repo hygiene ✅ `v0.3.0` ✅ `v0.3.0`
 
 **CLI plugin (Claude Code / Codex):**
 combined skill (terse output + YAGNI ladder that wakes only on coding
@@ -34,10 +34,11 @@ tasks), `/lazy`, `/lazy-refine`, `/lazy-compress`
   relaxed for reading-comprehension tasks [5].
 
 **Repo hygiene (hiring-grade):**
-GitHub Actions CI (Node 18/20/22 matrix + lint), CONTRIBUTING.md,
-SECURITY.md, CODE_OF_CONDUCT.md, issue/PR templates, CHANGELOG.md
-(semver, conventional commits), npm publish of `@iamtoolazy/core`
-(names verified available).
+GitHub Actions CI (Node 18/20/22 matrix + vendor-drift check), CONTRIBUTING,
+SECURITY, CODE_OF_CONDUCT, issue/PR templates, CHANGELOG. Shipped: the
+plugin is fully self-contained (core vendored via `npm run sync:cli`,
+enforced by CI). Remaining manual step: `npm publish` of
+`@iamtoolazy/core` (names verified available).
 
 ## Fase 3 — Browser extension (MV3)
 
