@@ -1,14 +1,36 @@
-# @iamtoolazy/extension — Fase 3
+# iamtoolazy — browser extension (MV3)
 
-Browser extension (Manifest V3, Chrome/Edge/Brave first) built on
-`@iamtoolazy/core`:
+**Status: Fase 3.A — scaffold.** The build pipeline, manifest, settings
+storage, and popup shell are real; site adapters (3.B), the preview diff
+(3.C), the ledger dashboard + wizard + BYOK (3.D), history savers (3.E),
+and media savers (3.F) land next, per
+[docs/master-plan.md](../../docs/master-plan.md).
 
-- Site adapters: claude.ai, chatgpt.com, gemini.google.com (+ generic fallback)
-- Auto mode with preview-diff before send (default on, configurable)
-- Media optimizer: image downscale/re-encode before upload; PDF → local text
-  extraction (opt-in, with consent — it changes what the AI receives)
-- Thread distiller + context health meter
-- Onboarding wizard (choose which savings modules to enable), options page,
-  BYOK key storage for the optional LLM refine pass, honest stats dashboard
+## Dev install (load unpacked)
 
-Not implemented yet. Tracked in the root README roadmap.
+```bash
+# from the repo root
+npm install
+npm run build:ext        # bundles @iamtoolazy/core into dist/content.js
+```
+
+Then in Chrome: `chrome://extensions` → enable **Developer mode** →
+**Load unpacked** → select the `packages/extension` folder.
+
+Verify it's alive: open https://claude.ai, https://chatgpt.com, or
+https://gemini.google.com and check DevTools console for the
+`🐨 iamtoolazy attached …` line (it runs a real compress/estimate
+self-test). The toolbar popup shows the per-site mode; the options page
+lets you change it (preview / auto / off — the modes take real effect in
+Fase 3.C).
+
+## Permissions
+
+| Permission | Why |
+|---|---|
+| `storage` | Per-site mode + (later) the local ledger. That's all. |
+
+No host permissions beyond the three declared chat sites, no network
+permissions, no telemetry. Token counts inside the extension use the
+honest chars/4 heuristic (the tokenizer stays out of the bundle for now —
+counts are labeled estimates everywhere).
