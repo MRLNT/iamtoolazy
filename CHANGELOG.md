@@ -2,6 +2,46 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com) · Versioning: semver.
 
+## [0.3.1] — 2026-07-07
+
+### Changed — BREAKING for plugin users
+- Plugin renamed `iamtoolazy` → `lazy`, and the `lazy-` filename prefix is
+  gone: commands are now `/lazy:on`, `/lazy:off`, `/lazy:status`,
+  `/lazy:stats`, `/lazy:refine`, `/lazy:compress`, `/lazy:review`
+  (previously `/iamtoolazy:lazy-*` — the plugin name said "lazy" twice).
+  Reinstall: `/plugin uninstall iamtoolazy@iamtoolazy` →
+  `/plugin marketplace update iamtoolazy` → `/plugin install lazy@iamtoolazy`.
+- The npm library `@iamtoolazy/core` is unaffected and stays at 0.3.0.
+
+### Fixed
+- Prompt hook no longer fires on slash commands, bash mode (`!`), or
+  memory notes (`#`) — the ledger and calibration only see real prompts
+- `stats`/`status`/`on`/`off` commands no longer echo the tool output a
+  second time
+
+## [0.4.0] — 2026-07-07
+
+### Changed
+- **Plugin renamed `iamtoolazy` → `lazy`** so namespaced commands are
+  short: `/lazy:stats`, `/lazy:on`, `/lazy:off`, … Install string is now
+  `/plugin install lazy@iamtoolazy`. (Renamed before any external users.)
+- Toggle split into discoverable micro-commands: `on`, `off`, `status`,
+  `level` — plus `help` as an in-tool menu
+- Docs now show the real namespaced invocations (the bare `/lazy` form
+  never existed in Claude Code)
+
+### Added
+- First-run onboarding: a SessionStart hook introduces the plugin exactly
+  once (recommended defaults, where data lives, how to turn it off)
+- `/lazy:help` command
+
+### Fixed
+- Slash commands are excluded from the hook: they no longer pollute the
+  ledger, pay overhead, or skew calibration
+- `/lazy:stats` no longer repeats its own output
+
+`@iamtoolazy/core` is unchanged — no npm publish for this release.
+
 ## [0.3.0] — 2026-07-07
 
 ### Added
@@ -20,6 +60,46 @@ Format: [Keep a Changelog](https://keepachangelog.com) · Versioning: semver.
   CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, issue/PR templates
 - README rebuilt around a "Which one do I install?" decision table
 - 4 new tests (37 total)
+
+## [0.3.1] — 2026-07-07
+
+### Changed — BREAKING for plugin users
+- Plugin renamed `iamtoolazy` → `lazy`, and the `lazy-` filename prefix is
+  gone: commands are now `/lazy:on`, `/lazy:off`, `/lazy:status`,
+  `/lazy:stats`, `/lazy:refine`, `/lazy:compress`, `/lazy:review`
+  (previously `/iamtoolazy:lazy-*` — the plugin name said "lazy" twice).
+  Reinstall: `/plugin uninstall iamtoolazy@iamtoolazy` →
+  `/plugin marketplace update iamtoolazy` → `/plugin install lazy@iamtoolazy`.
+- The npm library `@iamtoolazy/core` is unaffected and stays at 0.3.0.
+
+### Fixed
+- Prompt hook no longer fires on slash commands, bash mode (`!`), or
+  memory notes (`#`) — the ledger and calibration only see real prompts
+- `stats`/`status`/`on`/`off` commands no longer echo the tool output a
+  second time
+
+## [0.4.0] — 2026-07-07
+
+### Changed
+- **Plugin renamed `iamtoolazy` → `lazy`** so namespaced commands are
+  short: `/lazy:stats`, `/lazy:on`, `/lazy:off`, … Install string is now
+  `/plugin install lazy@iamtoolazy`. (Renamed before any external users.)
+- Toggle split into discoverable micro-commands: `on`, `off`, `status`,
+  `level` — plus `help` as an in-tool menu
+- Docs now show the real namespaced invocations (the bare `/lazy` form
+  never existed in Claude Code)
+
+### Added
+- First-run onboarding: a SessionStart hook introduces the plugin exactly
+  once (recommended defaults, where data lives, how to turn it off)
+- `/lazy:help` command
+
+### Fixed
+- Slash commands are excluded from the hook: they no longer pollute the
+  ledger, pay overhead, or skew calibration
+- `/lazy:stats` no longer repeats its own output
+
+`@iamtoolazy/core` is unchanged — no npm publish for this release.
 
 ## [0.3.0] — 2026-07-07
 
