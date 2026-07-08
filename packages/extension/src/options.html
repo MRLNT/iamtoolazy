@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>iamtoolazy — settings</title>
+<style>
+  body { max-width: 560px; margin: 40px auto; padding: 0 16px; background: #0d1117;
+         color: #c9d1d9; font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  h1 { color: #e6edf3; font-size: 18px; }
+  h1 img { vertical-align: -4px; margin-right: 8px; }
+  .site { display: flex; justify-content: space-between; align-items: center;
+          padding: 10px 0; border-bottom: 1px solid #21262d; }
+  select { background: #161b22; color: #c9d1d9; border: 1px solid #30363d;
+           border-radius: 6px; padding: 4px 8px; }
+  .dim { color: #8b949e; font-size: 12px; }
+  #saved { color: #3fb950; visibility: hidden; }
+</style>
+</head>
+<body>
+  <h1><img src="../icons/icon32.png" width="24" alt=""> iamtoolazy settings</h1>
+  <p class="dim">Per-site mode. <b>preview</b> shows a diff before anything
+  changes (default); <b>auto</b> and <b>off</b> become fully functional in
+  Fase 3.C — the choice is saved either way. Everything stays in this
+  browser's local storage.</p>
+  <div id="sites"></div>
+  <p id="saved">saved ✓</p>
+  <script src="options.js"></script>
+</body>
+</html>
