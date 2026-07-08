@@ -11,7 +11,8 @@
     "test": "node --test packages/core/test/*.test.js",
     "demo": "node scripts/demo.js",
     "sync:cli": "node scripts/sync-cli-core.mjs",
-    "lint": "eslint packages/*/src packages/*/hooks scripts"
+    "lint": "eslint packages/*/src packages/*/hooks scripts",
+    "build:ext": "esbuild packages/extension/src/content.js --bundle --format=iife --external:gpt-tokenizer/encoding/o200k_base --outfile=packages/extension/dist/content.js"
   },
   "engines": {
     "node": ">=18"
@@ -19,6 +20,7 @@
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "esbuild": "^0.28.1",
     "eslint": "^10.6.0"
   }
 }
