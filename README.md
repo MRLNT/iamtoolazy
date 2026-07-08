@@ -1,4 +1,8 @@
-# 🦥 iamtoolazy
+<p align="center">
+  <img src="assets/logo.png" width="120" alt="iamtoolazy — a koala conserving tokens">
+</p>
+
+# 🐨 iamtoolazy
 
 > Too lazy to waste tokens. So lazy, it even skips itself when that's cheaper.
 
@@ -122,9 +126,7 @@ never hidden. Predictions use the *low* end of community re-benchmarks.
 No benchmark, no claim. The whole policy: [docs/honest-numbers.md](docs/honest-numbers.md)
 
 ```
-        (\_/)
-        (-.-) zzz     ← the mascot, conserving tokens
-       c(")(")
+        ʕ -ᴥ- ʔ zzz     ← the mascot, conserving tokens
 ```
 
 ## Credits
