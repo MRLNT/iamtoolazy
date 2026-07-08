@@ -1,15 +1,23 @@
 {
   "name": "iamtoolazy",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Token-efficiency toolkit: save input, output & media tokens on Claude.",
-  "owner": { "name": "Marcel Antonio", "url": "https://github.com/MRLNT" },
+  "owner": {
+    "name": "Marcel Antonio",
+    "url": "https://github.com/MRLNT"
+  },
   "plugins": [
     {
-      "name": "iamtoolazy",
-      "description": "Adaptive token-saving directives (terse/YAGNI/CoD/budgets) that only fire when net-positive, on-device LAZY calibration, and /lazy utilities.",
+      "name": "lazy",
+      "description": "Adaptive token-saving directives (terse/YAGNI/CoD/budgets) that only fire when net-positive, on-device LAZY calibration, and short /lazy:* utilities.",
       "source": "./packages/cli",
       "category": "productivity",
-      "keywords": ["tokens", "efficiency", "yagni", "lazy"],
+      "keywords": [
+        "tokens",
+        "efficiency",
+        "yagni",
+        "lazy"
+      ],
       "homepage": "https://github.com/MRLNT/iamtoolazy"
     }
   ]

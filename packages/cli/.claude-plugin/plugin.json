@@ -1,10 +1,19 @@
 {
-  "name": "iamtoolazy",
-  "displayName": "iamtoolazy (/lazy)",
-  "version": "0.3.0",
-  "description": "Too lazy to waste tokens. Adaptive terse/YAGNI/budget directives that only fire when they save more than they cost, on-device LAZY calibration, and /lazy utilities.",
-  "author": { "name": "Marcel Antonio", "url": "https://github.com/MRLNT" },
+  "name": "lazy",
+  "displayName": "iamtoolazy (lazy)",
+  "version": "0.4.0",
+  "description": "Too lazy to waste tokens. Adaptive terse/YAGNI/CoD/budget directives that only fire when net-positive, on-device LAZY calibration, and short /lazy:* utilities.",
+  "author": {
+    "name": "Marcel Antonio",
+    "url": "https://github.com/MRLNT"
+  },
   "repository": "https://github.com/MRLNT/iamtoolazy",
   "license": "MIT",
-  "keywords": ["tokens", "efficiency", "yagni", "terse", "lazy"]
+  "keywords": [
+    "tokens",
+    "efficiency",
+    "yagni",
+    "terse",
+    "lazy"
+  ]
 }
