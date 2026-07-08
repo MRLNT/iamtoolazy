@@ -29,7 +29,7 @@ Inside any Claude Code session:
 
 ```
 /plugin marketplace add MRLNT/iamtoolazy
-/plugin install iamtoolazy@iamtoolazy
+/plugin install lazy@iamtoolazy
 ```
 
 Restart when prompted. From now on:
@@ -43,10 +43,12 @@ Restart when prompted. From now on:
 - A Stop hook measures real response lengths and calibrates future
   decisions to *your* usage — all data stays in `~/.iamtoolazy/`
 
-Commands: `/lazy on|off|lite|full|ultra` · `/lazy-refine <prompt>` ·
-`/lazy-compress [file]` · `/lazy-stats` · `/lazy-review`. Full details in
+Commands (Claude Code namespaces them as `plugin:command` — type `/lazy`
+and autocomplete finishes the rest): `/lazy:on [lite|full|ultra]` ·
+`/lazy:off` · `/lazy:status` · `/lazy:stats` · `/lazy:refine <prompt>` ·
+`/lazy:compress [file]` · `/lazy:review`. Full details in
 [packages/cli](packages/cli/README.md). Uninstall anytime with
-`/plugin uninstall iamtoolazy@iamtoolazy`.
+`/plugin uninstall lazy@iamtoolazy`.
 
 ## Why another token saver?
 
