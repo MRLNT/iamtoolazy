@@ -25,3 +25,13 @@ jobs:
           node-version: 22
       - run: npm ci
       - run: npm run lint
+  build-extension:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run build:ext
+      - run: test -s packages/extension/dist/content.js
