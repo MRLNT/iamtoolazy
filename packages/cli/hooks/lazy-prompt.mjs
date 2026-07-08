@@ -49,6 +49,13 @@ function main() {
   const input = JSON.parse(raw || '{}');
   const prompt = String(input.prompt || '');
   if (!prompt.trim()) return;
+  // Slash commands (/lazy:stats, /plugin, ...) are UI actions, not tasks:
+  // never inject into them, never count them in the ledger or calibration.
+  if (prompt.trimStart().startsWith('/')) return;
+  // Slash commands (/lazy:stats), bash mode (!) and memory notes (#) are
+  // not real prompts: never inject into them, never count them in the
+  // ledger, never let them pollute calibration.
+  if (/^\s*[/!#]/.test(prompt)) return;
 
   const cfg = readJson(CONFIG, { enabled: true, level: 'full' });
   if (cfg.enabled === false) return;
