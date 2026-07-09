@@ -1,28 +1,29 @@
-// iamtoolazy — content entry (bundled by esbuild from @iamtoolazy/core).
-// Scaffold scope (Fase 3.A): prove the core engine runs inside the page
-// and report which site we're on. Adapters attach in Fase 3.B.
-import { estimateTokens, compress } from '../../core/src/index.js';
+// iamtoolazy — content entry (Fase 3.B: adapters + Alt+L).
+import { getAdapter } from './adapters/index.js';
+import { initHotkey } from './hotkey.js';
 
 const site = location.hostname.replace(/^www\./, '');
-const KNOWN = ['claude.ai', 'chatgpt.com', 'gemini.google.com'];
 
 (async () => {
-  const settings = (await chrome.storage.local.get('settings')).settings || {};
+  const { settings = {} } = await chrome.storage.local.get('settings');
   const mode = settings[site] || 'preview';
 
-  // Self-test: run the real pipeline pieces once on a sample, so a broken
-  // bundle is loud in the console instead of silently dead.
-  const sample = 'Hi! Could you please maybe help me with this? Thanks!';
-  const c = compress(sample, { level: 'full' });
-  const t = estimateTokens(sample);
+  const adapter = getAdapter(site);
+  let inputFound = false;
+  if (adapter) {
+    initHotkey(adapter, adapter.site);
+    inputFound = !!(await adapter.waitForInput(10000));
+  }
 
   console.info(
-    `%c🐨 iamtoolazy%c attached on ${site} · mode: ${mode} · core ok ` +
-    `(sample: ${t} tok → compressed ${estimateTokens(c.output)} tok) · ` +
-    `adapters arrive in Fase 3.B`,
+    `%c🐨 iamtoolazy%c on ${site} · mode: ${mode} · adapter: ${adapter ? adapter.site : 'none'} · ` +
+    `composer: ${inputFound ? 'found ✓' : 'NOT found ✗'} · press Alt+L in the composer to compress in place`,
     'font-weight:bold', ''
   );
 
-  // Debug handle for field inspection.
-  window.__iamtoolazy = { site, mode, known: KNOWN.includes(site) };
+  try {
+    chrome.runtime.sendMessage({ type: 'lazy-status', site, inputFound });
+  } catch { /* background may be asleep; badge is cosmetic */ }
+
+  window.__iamtoolazy = { site, mode, adapter: adapter?.site || null, inputFound };
 })();
