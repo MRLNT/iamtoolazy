@@ -28,7 +28,8 @@ Fase 3.C).
 
 | Permission | Why |
 |---|---|
-| `storage` | Per-site mode + (later) the local ledger. That's all. |
+| `storage` | Per-site mode + the local ledger. |
+| `activeTab` | Read the current tab's hostname **only when you open the popup**, so it can show a one-click mode toggle for that site. No background tab access, ever. |
 
 No host permissions beyond the three declared chat sites, no network
 permissions, no telemetry. Token counts inside the extension use the
