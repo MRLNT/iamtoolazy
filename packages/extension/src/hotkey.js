@@ -1,9 +1,13 @@
-// iamtoolazy — Alt+L: compress the composer text in place.
-// The first real user feature: works TODAY without send-interception
-// (that arrives with the preview diff in Fase 3.C), and stays as the
-// manual fallback forever — selectors may rot, Alt+L survives.
+// iamtoolazy — Alt+L: compress the composer text.
+// Modes (per site, set in the popup/options):
+//   preview (default) → open the diff overlay; only Apply writes
+//   auto              → apply instantly, Undo in the toast
+//   off               → do nothing, say so
+// Field-hardened: verified writes, honest failure toast with an explicit
+// Copy button, ledger entry only on verified success.
 
 import { compress, estimateTokens } from '../../core/src/index.js';
+import { showPreview } from './ui/diff.js';
 
 let host, root, hideTimer;
 
@@ -58,9 +62,41 @@ async function appendLedger(entry) {
   } catch { /* ledger is best-effort */ }
 }
 
+/** Write finalText into the composer with the full honest-failure UX.
+ *  Shared by auto mode and the preview overlay's Apply. */
+async function applyWrite(adapter, el, before, finalText, site, kind) {
+  const wrote = await adapter.setText(el, finalText);
+  if (!wrote.ok) {
+    const restored = await adapter.setText(el, before);
+    console.info('🐨 iamtoolazy compressed text (rescue):', finalText);
+    const preview = finalText.length > 100 ? finalText.slice(0, 100) + '…' : finalText;
+    return toast(
+      (restored.ok
+        ? 'editor rejected the in-place edit — original kept. compressed: '
+        : 'edit failed — check your text. compressed: ') + `“${preview}”`,
+      [{
+        label: 'Copy',
+        onClick: async () => {
+          const ok = await copyToClipboard(finalText);
+          toast(ok ? 'copied 📋 — paste it into the chat box.' : 'copy failed — grab it from the DevTools console.');
+        },
+      }]
+    );
+  }
+  const b = estimateTokens(before);
+  const a = estimateTokens(finalText);
+  const pct = Math.max(0, Math.round((1 - a / b) * 100));
+  toast(`saved −${pct}% (~${b} → ~${a} tok, estimates)`, [{
+    label: 'Undo',
+    onClick: async () => { await adapter.setText(el, before); toast('restored.'); },
+  }]);
+  appendLedger({ ts: Date.now(), site, kind, beforeTok: b, afterTok: a });
+}
+
 async function run(adapter, site) {
   const { settings = {} } = await chrome.storage.local.get('settings');
-  if ((settings[site] || 'preview') === 'off') {
+  const mode = settings[site] || 'preview';
+  if (mode === 'off') {
     return toast('off on this site — change it in Options.');
   }
   const el = adapter.findInput();
@@ -70,7 +106,7 @@ async function run(adapter, site) {
 
   // Root cause of the three-round "undefined" saga: compress() returns
   // `.text` — `.output` belongs to processPrompt(). Guarded forever:
-  const { text: output } = compress(before, { level: 'full' });
+  const { text: output, removed } = compress(before, { level: 'full' });
   if (typeof output !== 'string' || !output.trim()) {
     return toast('internal error: compressor returned nothing — please report this.');
   }
@@ -78,33 +114,18 @@ async function run(adapter, site) {
   const a = estimateTokens(output);
   if (a >= b || output === before) return toast('already lean.');
 
-  const wrote = await adapter.setText(el, output);
-  if (!wrote.ok) {
-    // The site editor rejected our write. Keep the original, SHOW the
-    // compressed text, and let the user copy it with an explicit button
-    // (user-initiated = clipboard access the honest way). Never silent.
-    const restored = await adapter.setText(el, before);
-    console.info('🐨 iamtoolazy compressed text (rescue):', output);
-    const preview = output.length > 100 ? output.slice(0, 100) + '…' : output;
-    return toast(
-      (restored.ok
-        ? 'editor rejected the in-place edit — original kept. compressed: '
-        : 'edit failed — check your text. compressed: ') + `“${preview}”`,
-      [{
-        label: 'Copy',
-        onClick: async () => {
-          const ok = await copyToClipboard(output);
-          toast(ok ? 'copied 📋 — paste it into the chat box.' : 'copy failed — grab it from the DevTools console.');
-        },
-      }]
-    );
+  if (mode === 'preview') {
+    // Fase 3.C: preview finally earns its name — show the diff, let the
+    // user edit, and only Apply writes anything.
+    return showPreview({
+      before, after: output, removed, bTok: b, aTok: a,
+      onApply: (finalText) => applyWrite(adapter, el, before, finalText, site, 'preview'),
+      onCopy: (t) => copyToClipboard(t),
+    });
   }
-  const pct = Math.round((1 - a / b) * 100);
-  toast(`saved −${pct}% (~${b} → ~${a} tok, estimates)`, [{
-    label: 'Undo',
-    onClick: async () => { await adapter.setText(el, before); toast('restored.'); },
-  }]);
-  appendLedger({ ts: Date.now(), site, kind: 'hotkey', beforeTok: b, afterTok: a });
+
+  // auto mode: apply instantly, Undo in the toast
+  await applyWrite(adapter, el, before, output, site, 'auto');
 }
 
 export function initHotkey(adapter, site) {
