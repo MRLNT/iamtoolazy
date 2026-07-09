@@ -50,46 +50,49 @@ export function getText(el) {
 }
 
 const norm = (t) => String(t).replace(/\s+/g, ' ').trim();
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 
 /**
- * Editor-safe text replacement with VERIFICATION (Fase 3.B field lesson:
- * ProseMirror/Quill/React editors can silently re-render our write away,
- * leaving an empty box while we report success).
+ * Editor-safe text replacement — Fase 3.B field lessons, round 2:
  *
- * Strategy ladder, each step read-back-verified:
- *  1. textarea/input → native value setter + input event
- *  2. contenteditable → focus + selectAll + execCommand('insertText')
- *  3. contenteditable → synthetic paste event (all major editors accept)
- * Returns { ok, method } — callers must handle ok === false.
+ *  - Editors apply changes ASYNC → verify only after a frame + settle
+ *    delay (round 1's instant read-back produced false "failed"s).
+ *  - NEVER document.execCommand('selectAll'): if focus hasn't landed it
+ *    selects the WHOLE PAGE (caught on gemini). Selection is built with
+ *    Range.selectNodeContents(el), scoped to the composer only.
+ *  - NEVER dispatch synthetic paste events: unknown site handlers can
+ *    fire (chatgpt inserted "undefined" and auto-submitted). Removed
+ *    permanently — insertText via a real command is the only write path.
+ *
+ * Returns { ok, method }; async — callers await and handle ok === false.
  */
-export function setText(el, text) {
+export async function setText(el, text) {
   if (!el) return { ok: false, method: 'none' };
   const verify = () => norm(getText(el)) === norm(text);
+  const settle = async () => { await nextFrame(); await sleep(80); };
 
   if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
     const proto = Object.getPrototypeOf(el);
     const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
     if (setter) setter.call(el, text); else el.value = text;
     el.dispatchEvent(new Event('input', { bubbles: true }));
+    await settle();
     return { ok: verify(), method: 'value' };
   }
 
-  el.focus();
-  try {
-    document.execCommand('selectAll');
-    if (document.execCommand('insertText', false, text) && verify()) {
-      return { ok: true, method: 'insertText' };
-    }
-  } catch { /* fall through */ }
-
   try {
     el.focus();
-    document.execCommand('selectAll');
-    const dt = new DataTransfer();
-    dt.setData('text/plain', text);
-    el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
-    if (verify()) return { ok: true, method: 'paste' };
-  } catch { /* fall through */ }
+    await nextFrame(); // let focus actually land before touching selection
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    sel.addRange(range);
+    document.execCommand('insertText', false, text);
+    await settle();
+    if (verify()) return { ok: true, method: 'insertText' };
+  } catch { /* fall through to the honest failure */ }
 
   return { ok: verify(), method: 'failed' };
 }

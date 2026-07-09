@@ -35,6 +35,20 @@ function toast(msg, undoCb) {
   hideTimer = setTimeout(() => { root.innerHTML = ''; }, 10000);
 }
 
+async function copyToClipboard(text) {
+  try { await navigator.clipboard.writeText(text); return true; } catch { /* try legacy */ }
+  try {
+    const t = document.createElement('textarea');
+    t.value = text;
+    t.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+    document.body.appendChild(t);
+    t.select();
+    const ok = document.execCommand('copy');
+    t.remove();
+    return ok;
+  } catch { return false; }
+}
+
 async function appendLedger(entry) {
   try {
     const { ledger = [] } = await chrome.storage.local.get('ledger');
@@ -58,17 +72,16 @@ async function run(adapter, site) {
   const a = estimateTokens(output);
   if (a >= b || output === before) return toast('already lean.');
 
-  const wrote = adapter.setText(el, output);
+  const wrote = await adapter.setText(el, output);
   if (!wrote.ok) {
     // The site editor rejected our write. Restore the original, hand the
     // compressed text over via clipboard, and say so — never fail silently.
-    const restored = adapter.setText(el, before);
-    let clip = false;
-    try { await navigator.clipboard.writeText(restored.ok ? output : before); clip = true; } catch { /* no clipboard */ }
+    const restored = await adapter.setText(el, before);
+    const clip = await copyToClipboard(restored.ok ? output : before);
     return toast(
       restored.ok
-        ? `this editor rejected the in-place edit — compressed text ${clip ? 'copied to clipboard 📋, paste it manually' : 'could not be applied'}. original kept.`
-        : `edit failed — your ORIGINAL text ${clip ? 'is copied to clipboard 📋' : 'may need retyping'}. please report this.`
+        ? `this editor rejected the in-place edit — compressed text ${clip ? 'copied to clipboard 📋, paste it manually' : 'could not be copied either'}. original kept.`
+        : `edit failed — your ORIGINAL text ${clip ? 'is copied to clipboard 📋' : 'could not be copied — select and copy it now'}. please report this.`
     );
   }
   const pct = Math.round((1 - a / b) * 100);
