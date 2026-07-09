@@ -11,7 +11,8 @@
   },
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "clipboardWrite"
   ],
   "background": {
     "service_worker": "src/background.js"

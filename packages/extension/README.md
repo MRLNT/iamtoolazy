@@ -30,6 +30,7 @@ Fase 3.C).
 |---|---|
 | `storage` | Per-site mode + the local ledger. |
 | `activeTab` | Read the current tab's hostname **only when you open the popup**, so it can show a one-click mode toggle for that site. No background tab access, ever. |
+| `clipboardWrite` | Used ONLY in the Alt+L rescue path: if a site's editor rejects the in-place edit, your text is copied to the clipboard instead of being lost. Never reads the clipboard. |
 
 No host permissions beyond the three declared chat sites, no network
 permissions, no telemetry. Token counts inside the extension use the
