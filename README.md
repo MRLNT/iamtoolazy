@@ -8,26 +8,46 @@
 
 [![ci](https://github.com/MRLNT/iamtoolazy/actions/workflows/ci.yml/badge.svg)](https://github.com/MRLNT/iamtoolazy/actions)
 [![release](https://img.shields.io/github/v/release/MRLNT/iamtoolazy)](https://github.com/MRLNT/iamtoolazy/releases)
+[![npm](https://img.shields.io/npm/v/%40iamtoolazy%2Fcore)](https://www.npmjs.com/package/@iamtoolazy/core)
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![node](https://img.shields.io/badge/node-%E2%89%A518-brightgreen)](package.json)
 
 ![iamtoolazy demo](assets/demo.gif)
 
-Save input, output, **and** media tokens on Claude, ChatGPT, and Gemini —
-with honest numbers, zero telemetry, and a method that only acts when
-acting is cheaper than doing nothing. Works in English and Indonesian.
+## What is this?
 
-## Which one do I install?
+Every message you send to Claude, ChatGPT, or Gemini costs **tokens** —
+that's your quota, your rate limit, or your money. Most prompts carry
+filler the model never needed ("Hi! Could you please maybe…"). And most
+AI replies are longer than you wanted.
 
-| You are… | Install | Status |
+**iamtoolazy trims that waste automatically, without changing what you
+mean** — and shows you honest numbers about what it did (and what it
+deliberately skipped).
+
+## What you get
+
+- ✂️ **Prompt compression** — "Hi! Could you please fix this bug? Thanks
+  so much!!" → "Fix this bug." Same request, fraction of the tokens.
+- 🛡 **Meaning-safe by design** — code, URLs, file paths, numbers, and
+  negations ("don't", "never") are *never* touched. Tested, not promised.
+- 🧠 **Smart, not blind** — it classifies each prompt and acts **only when
+  saving beats the cost**. Short prompts cost exactly zero. It even
+  learns your real usage on-device and calibrates itself (the LAZY method).
+- 🧾 **The honest ledger** — every number is labeled an estimate, every
+  overhead is shown, every skip is explained. No inflated marketing math.
+- 🔒 **100% local** — zero telemetry, no accounts, no data leaves your
+  machine. Ever.
+- 🌏 **English + Bahasa Indonesia**, more languages coming (Fase 5).
+
+## Pick your door
+
+| You are… | Install | Time |
 |---|---|---|
-| **A Claude Code user** | The plugin — 2 commands, ~30 seconds, below ⬇️ | ✅ **available now** |
-| **A claude.ai / ChatGPT / Gemini web user** | The browser extension | 🔜 Fase 3 — ⭐ star to get notified |
-| **A JS developer** | `npm i @iamtoolazy/core` library | ✅ available now |
+| **A Claude Code user** | The plugin ⬇️ | ~30 sec |
+| **A claude.ai / ChatGPT / Gemini user** | The browser extension (beta) ⬇️ | ~2 min |
+| **A JS developer** | `npm i @iamtoolazy/core` ⬇️ | ~30 sec |
 
-That's it. One repo, three doors, pick yours.
-
-## Install the Claude Code plugin
+### Door 1 — Claude Code plugin
 
 Inside any Claude Code session:
 
@@ -36,54 +56,33 @@ Inside any Claude Code session:
 /plugin install lazy@iamtoolazy
 ```
 
-Restart when prompted. From now on:
+Run `/reload-plugins` when prompted — done. It introduces itself once,
+then works silently: every prompt is classified on your machine and a
+tiny saving directive is attached **only when it's worth it**. Try
+`/lazy:help` for the menu, `/lazy:stats` for your ledger, `/lazy:off` to
+pause. Details: [packages/cli](packages/cli/README.md).
 
-- Every prompt is classified on your machine (coding / reasoning / prose / q&a)
-- A tiny directive is attached **only when predicted savings beat its cost**
-  — short questions cost exactly **zero**
-- Reasoning gets [Chain-of-Draft](https://arxiv.org/abs/2502.18600), coding
-  gets the YAGNI ladder, everything except prose gets a token budget with
-  an elasticity floor ([TALE](https://arxiv.org/abs/2412.18547))
-- A Stop hook measures real response lengths and calibrates future
-  decisions to *your* usage — all data stays in `~/.iamtoolazy/`
+### Door 2 — Browser extension (beta)
 
-Commands (Claude Code namespaces them as `plugin:command` — type `/lazy`
-and autocomplete finishes the rest): `/lazy:on [lite|full|ultra]` ·
-`/lazy:off` · `/lazy:status` · `/lazy:stats` · `/lazy:refine <prompt>` ·
-`/lazy:compress [file]` · `/lazy:review`. Full details in
-[packages/cli](packages/cli/README.md). Uninstall anytime with
-`/plugin uninstall lazy@iamtoolazy`.
+Works on **claude.ai**, **chatgpt.com**, and **gemini.google.com**.
+Until the Web Store release (Fase 3.H), install the developer way:
 
-## Why another token saver?
+```bash
+git clone https://github.com/MRLNT/iamtoolazy && cd iamtoolazy
+npm install && npm run build:ext
+```
 
-[caveman](https://github.com/JuliusBrussee/caveman) proved terse output
-works. [ponytail](https://github.com/DietrichGebert/ponytail) proved
-minimal code works. Both are static policies — and both leave the biggest
-pools untouched:
+Then: `chrome://extensions` → enable **Developer mode** → **Load
+unpacked** → select the `packages/extension` folder.
 
-| Token pool | caveman | ponytail | **iamtoolazy** |
-|---|---|---|---|
-| Output prose | ✅ | — | ✅ adaptive (only when net-positive) |
-| Generated code | — | ✅ | ✅ YAGNI, wakes on coding tasks only |
-| **Your prompts** (re-sent every turn) | — | — | ✅ compress + PCTF refine |
-| **Media** (images, PDFs) | — | — | 🔜 Fase 3: downscale / local text extraction |
-| **Thread history** | partial | — | ✅ distiller + delta-context compression |
-| Web chat (claude.ai / ChatGPT / Gemini) | — | — | 🔜 Fase 3 extension |
-| Retry prevention | — | — | ✅ PCTF: Persona · Context · Task · Constraints · Format |
-| Net-negative guard | ⚠️ ~1–1.5k tok/turn overhead | ⚠️ deliberation cost | ✅ skips itself, with the reason logged |
-| Learns your usage | — | — | ✅ LAZY on-device calibration |
+**How to use it:** type your prompt in the chat box, then press
+**Alt+L** (**⌥L** on Mac). Your text compresses in place, a koala toast
+shows the honest savings, and **Undo** brings the original back.
+A green `on` badge on the toolbar icon means the extension found the
+chat box. Automatic mode with a preview diff arrives in Fase 3.C.
+Details: [packages/extension](packages/extension/README.md).
 
-## The LAZY method
-
-Our original contribution (reference implementation shipped; validation in
-Fase 4 — draft: [docs/paper/lazy-method.md](docs/paper/lazy-method.md)):
-
-- **Learn** — measure the actual token cost of every response, on-device
-- **Adapt** — calibrate the injection policy per user and task class (EWMA)
-- **Zero-waste** — never re-send what the conversation already established
-- **Yield** — an honest ledger: input deltas shown, skip reasons named
-
-## Library quick start
+### Door 3 — The library
 
 ```bash
 npm i @iamtoolazy/core
@@ -91,39 +90,65 @@ npm i @iamtoolazy/core
 
 ```js
 import { processPrompt, initTokenizer } from '@iamtoolazy/core';
-
 await initTokenizer(); // optional: real token counts instead of chars/4
-const r = processPrompt(
-  'Hi! Could you please implement login with rate limiting? ' +
-  'I am building a small app. Avoid external providers. Thanks!'
-);
-r.output;                 // compressed + PCTF-structured + directive attached
-r.tokens.predictedNet;    // the honest ledger
-r.injection.reason;       // why it did (or didn't) act
+const r = processPrompt('Hi! Could you please implement login? Thanks!');
+r.output;               // compressed + structured + directive attached
+r.tokens.predictedNet;  // the honest ledger
+r.injection.reason;     // why it acted — or why it refused to
 ```
 
-Every stage is independently toggleable: `compress` (lite/full/ultra),
-`refine` (auto/structure/tighten), `inject` (terse/CoD/YAGNI/budget),
-`history` (delta-context), `calibration`.
+## How it works (60 seconds)
+
+1. **Classify** — coding / reasoning / prose / q&a, detected locally.
+2. **Act only when net-positive** — compression and tiny directives
+   (research-backed: [Chain-of-Draft](https://arxiv.org/abs/2502.18600),
+   [TALE budgets](https://arxiv.org/abs/2412.18547)) are attached only
+   when predicted savings beat their own cost. Otherwise: zero touch.
+3. **Learn** — response lengths are measured on your device and future
+   decisions calibrate to *your* usage. That loop is our original
+   contribution, the **LAZY method** (Learn · Adapt · Zero-waste ·
+   Yield): [docs/paper/lazy-method.md](docs/paper/lazy-method.md).
+4. **Show the receipt** — the ledger prints savings *and* overhead,
+   labeled as estimates until the Fase 4 benchmarks replace them with
+   measured numbers.
+
+## FAQ
+
+**Does my data go anywhere?** No. Everything runs locally; there is no
+server, no telemetry, no account. The optional BYOK refine feature
+(coming in 3.D) sends text only to the AI provider *you* configure with
+*your* key.
+
+**Will it change my meaning?** It refuses to touch code, URLs, paths,
+numbers, and negations — enforced by tests, and structurally impossible
+to remove in the compressor. When in doubt, it keeps your wording.
+
+**How much does it save?** Honestly: it depends, and today's numbers are
+labeled estimates. Typical sloppy prompts compress 30–70%. Reproducible
+benchmarks (run N times, reported as mean ± spread, never single runs)
+land in Fase 4.
+
+**Why "lazy"?** Because the cheapest token is the one never sent — and
+the smartest tool is the one that knows when doing nothing is optimal.
+
+**Is it free?** MIT. Forever.
+
+## vs caveman & ponytail
+
+[caveman](https://github.com/JuliusBrussee/caveman) proved terse output
+works; [ponytail](https://github.com/DietrichGebert/ponytail) proved
+minimal code works. Both are static policies. iamtoolazy covers the
+pools they don't — your prompts (re-sent every turn), media, thread
+history — adds a net-negative guard with logged skip reasons, and
+calibrates to you. Full comparison + roadmap:
+[docs/master-plan.md](docs/master-plan.md).
 
 ## Status
 
-- **Fase 1–2 ✅** — core engine + LAZY reference implementation + Claude
-  Code plugin + CI + community docs (`v0.3.0`, 37 tests)
-- **Fase 3 🔜** — browser extension (MV3): auto mode with preview diff,
-  image downscale, PDF→text, thread distiller, onboarding wizard
-- **Fase 4** — reproducible benchmarks vs caveman / ponytail / a one-line
-  "be brief" — plus the LAZY ablation study and paper finalization
-- **Fase 5** — LLMLingua-2 local Smart Compress, community language packs,
-  TypeScript declarations
-
-Full roadmap: [docs/roadmap.md](docs/roadmap.md)
-
-## Honest numbers, or it didn't happen
-
-Every count in our UI is labeled an estimate. Input overhead is shown,
-never hidden. Predictions use the *low* end of community re-benchmarks.
-No benchmark, no claim. The whole policy: [docs/honest-numbers.md](docs/honest-numbers.md)
+**Live now:** core on npm · Claude Code plugin · extension beta with
+Alt+L. **Next:** preview diff (3.C) → dashboard + BYOK (3.D) → history &
+media savers (3.E–F) → Web Store (3.H) → measured benchmarks + paper +
+playground (Fase 4) → smart compress + language packs + 1.0 (Fase 5).
 
 ```
         ʕ -ᴥ- ʔ zzz     ← the mascot, conserving tokens
@@ -133,9 +158,8 @@ No benchmark, no claim. The whole policy: [docs/honest-numbers.md](docs/honest-n
 
 Built with respect on the shoulders of two excellent projects:
 [caveman](https://github.com/JuliusBrussee/caveman) by Julius Brussee and
-[ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich Gebert.
-iamtoolazy exists because their work proved the ideas — we extend them to
-the pools they don't cover.
+[ponytail](https://github.com/DietrichGebert/ponytail) by Dietrich
+Gebert. iamtoolazy exists because their work proved the ideas.
 
 ## License
 
