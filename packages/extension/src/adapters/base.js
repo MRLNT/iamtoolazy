@@ -2,13 +2,27 @@
 // Design rule: selectors WILL rot. Every adapter carries a selector
 // ladder (most-specific first) and every consumer must tolerate null.
 
-/** First element matching any selector in the ladder. */
+function visible(el) {
+  if (!el.getClientRects().length) return false;
+  const st = getComputedStyle(el);
+  return st.visibility !== 'hidden' && st.display !== 'none';
+}
+
+/**
+ * Pick the composer from a selector ladder. Field lesson (Fase 3.B):
+ * generic rungs can catch huge wrapper containers. Guards, per rung:
+ * visible only → innermost only (drop any candidate that contains
+ * another candidate) → bottom-most on screen (composers live at the
+ * bottom). First rung with a survivor wins.
+ */
 export function firstMatch(selectors, root = document) {
   for (const s of selectors) {
-    try {
-      const el = root.querySelector(s);
-      if (el) return el;
-    } catch { /* invalid selector in an older Chrome — skip */ }
+    let cands;
+    try { cands = [...root.querySelectorAll(s)].filter(visible); } catch { continue; }
+    if (!cands.length) continue;
+    const innermost = cands.filter((a) => !cands.some((b) => b !== a && a.contains(b)));
+    innermost.sort((a, b) => b.getBoundingClientRect().top - a.getBoundingClientRect().top);
+    if (innermost[0]) return innermost[0];
   }
   return null;
 }
@@ -35,30 +49,49 @@ export function getText(el) {
   return el.innerText || '';
 }
 
+const norm = (t) => String(t).replace(/\s+/g, ' ').trim();
+
 /**
- * Set text in a way React/ProseMirror/Quill editors accept.
- * textarea/input → native value setter + input event (React-safe);
- * contenteditable → selectAll + insertText command, textContent fallback.
+ * Editor-safe text replacement with VERIFICATION (Fase 3.B field lesson:
+ * ProseMirror/Quill/React editors can silently re-render our write away,
+ * leaving an empty box while we report success).
+ *
+ * Strategy ladder, each step read-back-verified:
+ *  1. textarea/input → native value setter + input event
+ *  2. contenteditable → focus + selectAll + execCommand('insertText')
+ *  3. contenteditable → synthetic paste event (all major editors accept)
+ * Returns { ok, method } — callers must handle ok === false.
  */
 export function setText(el, text) {
-  if (!el) return false;
+  if (!el) return { ok: false, method: 'none' };
+  const verify = () => norm(getText(el)) === norm(text);
+
   if (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT') {
     const proto = Object.getPrototypeOf(el);
     const setter = Object.getOwnPropertyDescriptor(proto, 'value')?.set;
     if (setter) setter.call(el, text); else el.value = text;
     el.dispatchEvent(new Event('input', { bubbles: true }));
-    return true;
+    return { ok: verify(), method: 'value' };
   }
+
   el.focus();
-  const sel = window.getSelection();
-  sel.selectAllChildren(el);
-  let ok = false;
-  try { ok = document.execCommand('insertText', false, text); } catch { /* deprecated but alive */ }
-  if (!ok) {
-    el.textContent = text;
-    el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: text }));
-  }
-  return true;
+  try {
+    document.execCommand('selectAll');
+    if (document.execCommand('insertText', false, text) && verify()) {
+      return { ok: true, method: 'insertText' };
+    }
+  } catch { /* fall through */ }
+
+  try {
+    el.focus();
+    document.execCommand('selectAll');
+    const dt = new DataTransfer();
+    dt.setData('text/plain', text);
+    el.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+    if (verify()) return { ok: true, method: 'paste' };
+  } catch { /* fall through */ }
+
+  return { ok: verify(), method: 'failed' };
 }
 
 /** Last-resort target: whatever editable thing has focus. */

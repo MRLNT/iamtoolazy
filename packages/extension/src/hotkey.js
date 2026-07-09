@@ -32,7 +32,7 @@ function toast(msg, undoCb) {
     b.addEventListener('click', () => { undoCb(); toast('restored.'); });
     root.querySelector('.pill').appendChild(b);
   }
-  hideTimer = setTimeout(() => { root.innerHTML = ''; }, 6000);
+  hideTimer = setTimeout(() => { root.innerHTML = ''; }, 10000);
 }
 
 async function appendLedger(entry) {
@@ -58,7 +58,19 @@ async function run(adapter, site) {
   const a = estimateTokens(output);
   if (a >= b || output === before) return toast('already lean.');
 
-  adapter.setText(el, output);
+  const wrote = adapter.setText(el, output);
+  if (!wrote.ok) {
+    // The site editor rejected our write. Restore the original, hand the
+    // compressed text over via clipboard, and say so — never fail silently.
+    const restored = adapter.setText(el, before);
+    let clip = false;
+    try { await navigator.clipboard.writeText(restored.ok ? output : before); clip = true; } catch { /* no clipboard */ }
+    return toast(
+      restored.ok
+        ? `this editor rejected the in-place edit — compressed text ${clip ? 'copied to clipboard 📋, paste it manually' : 'could not be applied'}. original kept.`
+        : `edit failed — your ORIGINAL text ${clip ? 'is copied to clipboard 📋' : 'may need retyping'}. please report this.`
+    );
+  }
   const pct = Math.round((1 - a / b) * 100);
   toast(`saved −${pct}% (~${b} → ~${a} tok, estimates)`, () => adapter.setText(el, before));
   appendLedger({ ts: Date.now(), site, kind: 'hotkey', beforeTok: b, afterTok: a });
