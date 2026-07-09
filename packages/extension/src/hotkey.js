@@ -7,7 +7,7 @@ import { compress, estimateTokens } from '../../core/src/index.js';
 
 let host, root, hideTimer;
 
-function toast(msg, undoCb) {
+function toast(msg, buttons = []) {
   if (!host) {
     host = document.createElement('div');
     host.style.cssText =
@@ -21,15 +21,16 @@ function toast(msg, undoCb) {
       .pill { background:#0d1117; color:#c9d1d9; border:1px solid #30363d;
               border-radius:10px; padding:10px 14px; display:flex; gap:10px;
               align-items:center; font:12px/1.4 ui-monospace,Menlo,monospace;
-              box-shadow:0 4px 16px rgba(0,0,0,.5); }
+              box-shadow:0 4px 16px rgba(0,0,0,.5); max-width:420px;
+              white-space:normal; overflow-wrap:anywhere; }
       button { background:#21262d; color:#58a6ff; border:1px solid #30363d;
                border-radius:6px; padding:2px 10px; font:inherit; cursor:pointer; }
     </style>
     <div class="pill"><span>🐨 ${msg}</span></div>`;
-  if (undoCb) {
+  for (const { label, onClick } of buttons) {
     const b = document.createElement('button');
-    b.textContent = 'Undo';
-    b.addEventListener('click', () => { undoCb(); toast('restored.'); });
+    b.textContent = label;
+    b.addEventListener('click', onClick);
     root.querySelector('.pill').appendChild(b);
   }
   hideTimer = setTimeout(() => { root.innerHTML = ''; }, 10000);
@@ -67,25 +68,42 @@ async function run(adapter, site) {
   const before = adapter.getText(el);
   if (!before.trim()) return toast('nothing to compress.');
 
-  const { output } = compress(before, { level: 'full' });
+  // Root cause of the three-round "undefined" saga: compress() returns
+  // `.text` — `.output` belongs to processPrompt(). Guarded forever:
+  const { text: output } = compress(before, { level: 'full' });
+  if (typeof output !== 'string' || !output.trim()) {
+    return toast('internal error: compressor returned nothing — please report this.');
+  }
   const b = estimateTokens(before);
   const a = estimateTokens(output);
   if (a >= b || output === before) return toast('already lean.');
 
   const wrote = await adapter.setText(el, output);
   if (!wrote.ok) {
-    // The site editor rejected our write. Restore the original, hand the
-    // compressed text over via clipboard, and say so — never fail silently.
+    // The site editor rejected our write. Keep the original, SHOW the
+    // compressed text, and let the user copy it with an explicit button
+    // (user-initiated = clipboard access the honest way). Never silent.
     const restored = await adapter.setText(el, before);
-    const clip = await copyToClipboard(restored.ok ? output : before);
+    console.info('🐨 iamtoolazy compressed text (rescue):', output);
+    const preview = output.length > 100 ? output.slice(0, 100) + '…' : output;
     return toast(
-      restored.ok
-        ? `this editor rejected the in-place edit — compressed text ${clip ? 'copied to clipboard 📋, paste it manually' : 'could not be copied either'}. original kept.`
-        : `edit failed — your ORIGINAL text ${clip ? 'is copied to clipboard 📋' : 'could not be copied — select and copy it now'}. please report this.`
+      (restored.ok
+        ? 'editor rejected the in-place edit — original kept. compressed: '
+        : 'edit failed — check your text. compressed: ') + `“${preview}”`,
+      [{
+        label: 'Copy',
+        onClick: async () => {
+          const ok = await copyToClipboard(output);
+          toast(ok ? 'copied 📋 — paste it into the chat box.' : 'copy failed — grab it from the DevTools console.');
+        },
+      }]
     );
   }
   const pct = Math.round((1 - a / b) * 100);
-  toast(`saved −${pct}% (~${b} → ~${a} tok, estimates)`, () => adapter.setText(el, before));
+  toast(`saved −${pct}% (~${b} → ~${a} tok, estimates)`, [{
+    label: 'Undo',
+    onClick: async () => { await adapter.setText(el, before); toast('restored.'); },
+  }]);
   appendLedger({ ts: Date.now(), site, kind: 'hotkey', beforeTok: b, afterTok: a });
 }
 
