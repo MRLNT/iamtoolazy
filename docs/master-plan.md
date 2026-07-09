@@ -121,6 +121,14 @@ Goal: replace every "should save" with a measured number, publish the
 LAZY method with real results, and let people try the engine in 10
 seconds without installing anything.
 
+> **Methodology upgrade (adopted 2026-07-09):** no single-run claims,
+> ever. Every condition runs **N times (default 5)** and reports
+> **mean ± min/max spread**; token metrics use the offline tokenizer
+> (deterministic, zero API cost); fidelity is verified with QA probes on
+> early-turn facts across the N runs, and any probe whose verdict flips
+> between runs is flagged as unstable; CI only renders committed results
+> — never live API calls.
+
 ### 4.A Benchmark harness  [sandbox-verifiable]
 - **Files:** `benchmarks/workloads/*.jsonl` (coding / reasoning / qa /
   writing × EN + ID, ~10 prompts each); `benchmarks/run.mjs` — conditions:
@@ -128,8 +136,12 @@ seconds without installing anything.
   `yagni-only` (ponytail-style), `iamtoolazy` (full adaptive), plus LAZY
   ablations `E1` (no calibration), `E2` (no net-positive guard), `E3`
   (fixed budgets); BYOK via env vars; N repeats; outputs raw JSONL +
-  cost/token deltas; `benchmarks/report.mjs` renders `RESULTS.md` with
-  means, CIs, and the input-overhead column nobody else prints.
+  cost/token deltas; repeat-run support (`--n 5`) built into the runner;
+  a **history-modes workload** (full history vs distiller vs
+  delta-context, exercising the 3.E features) joins the four task
+  classes; `benchmarks/report.mjs` renders `RESULTS.md` with means,
+  spreads, stability flags, and the input-overhead column nobody else
+  prints.
 - **Commits:** `feat(bench): workloads` · `feat(bench): runner with
   ablations` · `feat(bench): report generator`
 
@@ -222,3 +234,10 @@ seconds without installing anything.
 | Chrome Web Store review friction | Minimal permissions (`storage` only), privacy docs ready, beta via unpacked/Release zip meanwhile |
 | Benchmark API cost | Dry-run cost projection before any spend; small-N first |
 | Solo-maintainer bandwidth | Every sub-fase is independently shippable; the plan tolerates pauses |
+
+## Backlog (post-v1.0)
+
+- **`@iamtoolazy/variance`** — generalize the Fase 4 repeat-run machinery
+  into a standalone harness: run any agentic task N times, diff outcomes,
+  score stability. Re-validate the gap before starting.
+- **Firefox port** of the extension.
