@@ -1,15 +1,15 @@
-// iamtoolazy — popup: one-click mode toggle for the CURRENT site
-// (activeTab grants the URL only when the user opens this popup),
-// plus the other sites' modes at a glance.
+// iamtoolazy — popup: quick mode toggle for the current site + the
+// honest ledger (Fase 3.D). All numbers labeled estimates.
 const SITES = ['claude.ai', 'chatgpt.com', 'gemini.google.com'];
 
 (async () => {
   document.getElementById('version').textContent =
     `v${chrome.runtime.getManifest().version} — extension beta`;
 
-  const { settings = {} } = await chrome.storage.local.get('settings');
+  const store = await chrome.storage.local.get(['settings', 'ledger']);
+  const settings = store.settings || {};
 
-  // Which site is the active tab on?
+  // ── current-site quick toggle (activeTab) ──
   let here = null;
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -30,18 +30,39 @@ const SITES = ['claude.ai', 'chatgpt.com', 'gemini.google.com'];
       b.addEventListener('click', async () => {
         settings[here] = b.dataset.mode;
         await chrome.storage.local.set({ settings });
-        paint(); renderOthers();
+        paint();
       });
     }
     paint();
   }
 
-  function renderOthers() {
-    const rows = SITES.filter((s) => s !== here)
-      .map((s) => `${s}: <b>${settings[s] || 'preview'}</b>`)
+  // ── the honest ledger ──
+  const renderLedger = (ledger) => {
+    const entries = (ledger || []).filter((e) => e && e.beforeTok >= e.afterTok);
+    if (!entries.length) return;
+    const saved = entries.reduce((a, e) => a + (e.beforeTok - e.afterTok), 0);
+    document.getElementById('totals').innerHTML =
+      `<span class="big">~${saved} tok saved</span> · ${entries.length} compression${entries.length > 1 ? 's' : ''}`;
+    const per = {};
+    for (const e of entries) {
+      per[e.site] = per[e.site] || { n: 0, s: 0 };
+      per[e.site].n += 1;
+      per[e.site].s += e.beforeTok - e.afterTok;
+    }
+    document.getElementById('persite').innerHTML = Object.entries(per)
+      .map(([s, v]) => `${s}: ~${v.s} tok · ${v.n}×`)
       .join('<br>');
-    document.getElementById('modes').innerHTML =
-      rows ? `<span class="dim">other sites</span><br>${rows}` : '';
-  }
-  renderOthers();
+  };
+  renderLedger(store.ledger);
+
+  document.getElementById('reset').addEventListener('click', async () => {
+    await chrome.storage.local.set({ ledger: [] });
+    document.getElementById('totals').innerHTML =
+      'ledger reset — press <b>⌥L</b> in a chat box';
+    document.getElementById('persite').innerHTML = '';
+  });
+
+  document.getElementById('opt').addEventListener('click', () => chrome.runtime.openOptionsPage());
+  document.getElementById('guide').addEventListener('click', () =>
+    chrome.tabs.create({ url: chrome.runtime.getURL('src/welcome.html') }));
 })();
