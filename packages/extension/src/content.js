@@ -6,7 +6,9 @@ import { initHotkey } from './hotkey.js';
 const site = location.hostname.replace(/^www\./, '');
 
 (async () => {
-  const { settings = {} } = await chrome.storage.local.get('settings');
+  let settings;
+  try { ({ settings = {} } = await chrome.storage.local.get('settings')); }
+  catch { console.info('🐨 iamtoolazy: extension was reloaded — refresh this tab to reconnect.'); return; }
   const mode = settings[site] || 'preview';
 
   const adapter = getAdapter(site);

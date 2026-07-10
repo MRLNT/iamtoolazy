@@ -94,7 +94,14 @@ async function applyWrite(adapter, el, before, finalText, site, kind) {
 }
 
 async function run(adapter, site) {
-  const { settings = {} } = await chrome.storage.local.get('settings');
+  // After the extension is reloaded, old tabs lose their chrome.* bridge
+  // ("extension context invalidated"). Fail with guidance, not a crash.
+  if (!chrome?.storage?.local) {
+    return toast('iamtoolazy was updated — refresh this tab (⌘R / Ctrl+R) to reconnect.');
+  }
+  let settings;
+  try { ({ settings = {} } = await chrome.storage.local.get('settings')); }
+  catch { return toast('iamtoolazy was updated — refresh this tab to reconnect.'); }
   const mode = settings[site] || 'preview';
   if (mode === 'off') {
     return toast('off on this site — change it in Options.');
@@ -106,7 +113,7 @@ async function run(adapter, site) {
 
   // Root cause of the three-round "undefined" saga: compress() returns
   // `.text` — `.output` belongs to processPrompt(). Guarded forever:
-  const { text: output, removed, lang } = compress(before, { level: 'full' });
+  const { text: output, removed } = compress(before, { level: 'full' });
   if (typeof output !== 'string' || !output.trim()) {
     return toast('internal error: compressor returned nothing — please report this.');
   }
@@ -118,7 +125,7 @@ async function run(adapter, site) {
     // Fase 3.C: preview finally earns its name — show the diff, let the
     // user edit, and only Apply writes anything.
     return showPreview({
-      before, after: output, removed, bTok: b, aTok: a, lang,
+      before, after: output, removed, bTok: b, aTok: a,
       onApply: (finalText) => applyWrite(adapter, el, before, finalText, site, 'preview'),
       onCopy: (t) => copyToClipboard(t),
     });
