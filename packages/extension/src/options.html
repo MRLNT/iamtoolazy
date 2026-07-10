@@ -24,6 +24,31 @@
   browser's local storage.</p>
   <div id="sites"></div>
   <p id="saved">saved ✓</p>
+
+  <h1 style="margin-top:34px"><img src="../icons/icon32.png" width="24" alt=""> AI refine (optional, BYOK)</h1>
+  <p class="dim">Adds a <b>✨ Refine</b> button to the preview overlay: your text is
+  rewritten into a tighter, structured prompt by the AI provider <b>you</b>
+  configure, using <b>your</b> key. The key is stored only in this
+  browser's local storage, is sent only to that provider, and is never
+  logged. Leave empty to keep the feature off.</p>
+  <div class="site">
+    <span>provider</span>
+    <select id="provider">
+      <option value="">— none —</option>
+      <option value="anthropic">Anthropic</option>
+      <option value="openai">OpenAI</option>
+      <option value="gemini">Gemini</option>
+    </select>
+  </div>
+  <div class="site">
+    <span>API key</span>
+    <input id="apikey" type="password" placeholder="sk-…" style="background:#161b22;color:#c9d1d9;border:1px solid #30363d;border-radius:6px;padding:4px 8px;width:280px;font:inherit">
+  </div>
+  <div class="site">
+    <span></span>
+    <span><button id="savekey">Save</button> <button id="clearkey">Clear</button>
+    <span id="keysaved" style="color:#3fb950;visibility:hidden">saved ✓</span></span>
+  </div>
   <script src="options.js"></script>
 </body>
 </html>
