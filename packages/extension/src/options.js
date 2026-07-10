@@ -1,6 +1,11 @@
 // iamtoolazy — options: per-site mode, persisted to chrome.storage.local.
 const SITES = ['claude.ai', 'chatgpt.com', 'gemini.google.com'];
 const MODES = ['preview', 'auto', 'off'];
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+
+for (const k of document.querySelectorAll('.kbd-combo')) {
+  k.textContent = IS_MAC ? '⌥L' : 'Alt+L';
+}
 
 (async () => {
   const { settings = {} } = await chrome.storage.local.get('settings');
@@ -27,30 +32,4 @@ const MODES = ['preview', 'auto', 'off'];
     row.append(label, sel);
     root.appendChild(row);
   }
-})();
-
-// ── BYOK (Fase 3.D) ──
-(async () => {
-  const { byok } = await chrome.storage.local.get('byok');
-  if (byok) {
-    document.getElementById('provider').value = byok.provider || '';
-    document.getElementById('apikey').value = byok.apiKey || '';
-  }
-  const flash = () => {
-    const k = document.getElementById('keysaved');
-    k.style.visibility = 'visible';
-    setTimeout(() => (k.style.visibility = 'hidden'), 1200);
-  };
-  document.getElementById('savekey').addEventListener('click', async () => {
-    const provider = document.getElementById('provider').value;
-    const apiKey = document.getElementById('apikey').value.trim();
-    await chrome.storage.local.set({ byok: provider && apiKey ? { provider, apiKey } : null });
-    flash();
-  });
-  document.getElementById('clearkey').addEventListener('click', async () => {
-    await chrome.storage.local.set({ byok: null });
-    document.getElementById('provider').value = '';
-    document.getElementById('apikey').value = '';
-    flash();
-  });
 })();
