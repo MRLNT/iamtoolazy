@@ -90,7 +90,7 @@ export function showPreview({ before, after, removed, bTok, aTok, onApply, onCop
         <button class="apply" id="apply">Apply</button>
         <button id="copy">Copy</button>
         <button id="skip">Skip</button>
-        <span class="right">Esc = skip · ⌘Enter = apply</span>
+        <span class="right">Esc = skip · Enter / ⌘Enter = apply</span>
       </div>
     </div>`;
 
@@ -98,16 +98,38 @@ export function showPreview({ before, after, removed, bTok, aTok, onApply, onCop
   const ta = root.getElementById('after');
   ta.value = after;
 
-  root.getElementById('apply').addEventListener('click', () => { const v = ta.value; close(); onApply(v); });
+  const apply = () => { const v = ta.value; close(); onApply(v); };
+  root.getElementById('apply').addEventListener('click', apply);
   root.getElementById('copy').addEventListener('click', async () => {
     const ok = await onCopy(ta.value);
     root.getElementById('copy').textContent = ok ? 'Copied 📋' : 'Copy failed';
   });
   root.getElementById('skip').addEventListener('click', close);
   root.querySelector('.back').addEventListener('click', close);
-  root.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') { e.stopPropagation(); close(); }
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.stopPropagation(); const v = ta.value; close(); onApply(v); }
-  });
+
+  // ── The overlay OWNS the keyboard while open (Fase 3.C field lesson) ──
+  // Chat sites install global key listeners ("type anywhere → focus the
+  // composer") that steal keystrokes from our textarea. Two defenses:
+  //
+  // 1) Boundary stop (bubble phase, on the host): our inner handlers and
+  //    the browser's default typing run first, then propagation dies at
+  //    the host — the site's document/window listeners never hear it.
+  for (const t of ['keydown', 'keyup', 'keypress', 'input', 'paste', 'cut', 'copy']) {
+    host.addEventListener(t, (e) => e.stopPropagation());
+  }
+  // 2) Our own keys at window-capture, scoped to the overlay:
+  //    Esc = skip · ⌘/Ctrl+Enter = apply anywhere · plain Enter = apply
+  //    when focus is OUTSIDE the textarea (inside it, Enter = newline).
+  const onKey = (e) => {
+    if (!host.isConnected) { window.removeEventListener('keydown', onKey, true); return; }
+    if (!e.composedPath().includes(host)) return;
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); return; }
+    const inTextarea = root.activeElement === ta;
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey || !inTextarea)) {
+      e.preventDefault(); e.stopPropagation(); apply();
+    }
+  };
+  window.addEventListener('keydown', onKey, true);
+
   ta.focus();
 }
