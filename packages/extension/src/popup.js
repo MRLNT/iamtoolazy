@@ -1,6 +1,11 @@
 // iamtoolazy — popup: quick mode toggle for the current site + the
 // honest ledger (Fase 3.D). All numbers labeled estimates.
 const SITES = ['claude.ai', 'chatgpt.com', 'gemini.google.com'];
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+const COMBO = IS_MAC ? '⌥L (Alt+L)' : 'Alt+L';
+document.getElementById('hint').innerHTML =
+  `Press <b>${COMBO}</b> in the chat box · <b>preview</b> shows the diff first.`;
+for (const k of document.querySelectorAll('.kbd-combo')) k.textContent = IS_MAC ? '⌥L' : 'Alt+L';
 
 (async () => {
   document.getElementById('version').textContent =
@@ -58,7 +63,7 @@ const SITES = ['claude.ai', 'chatgpt.com', 'gemini.google.com'];
   document.getElementById('reset').addEventListener('click', async () => {
     await chrome.storage.local.set({ ledger: [] });
     document.getElementById('totals').innerHTML =
-      'ledger reset — press <b>⌥L</b> in a chat box';
+      `ledger reset — press <b>${IS_MAC ? '⌥L' : 'Alt+L'}</b> in a chat box`;
     document.getElementById('persite').innerHTML = '';
   });
 

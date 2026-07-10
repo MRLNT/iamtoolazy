@@ -1,6 +1,10 @@
 // iamtoolazy — first-run wizard: per-site mode pickers + done.
 const SITES = ['claude.ai', 'chatgpt.com', 'gemini.google.com'];
 const MODES = ['preview', 'auto', 'off'];
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+for (const k of document.querySelectorAll('.kbd-combo')) {
+  k.textContent = IS_MAC ? '⌥L' : 'Alt+L';
+}
 
 (async () => {
   const { settings = {} } = await chrome.storage.local.get('settings');
@@ -15,6 +19,7 @@ const MODES = ['preview', 'auto', 'off'];
     for (const m of MODES) {
       const b = document.createElement('button');
       b.textContent = m;
+      b.dataset.mode = m;
       const paint = () => b.classList.toggle('active', (settings[site] || 'preview') === m);
       paint();
       b.addEventListener('click', async () => {

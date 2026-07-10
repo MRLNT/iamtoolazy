@@ -16,6 +16,7 @@
   .seg button { flex: 1; background: #161b22; color: #8b949e; border: 1px solid #30363d;
                 border-radius: 6px; padding: 5px 0; font: inherit; cursor: pointer; }
   .seg button.active { background: #1a7f37; color: #fff; border-color: #1a7f37; }
+  .seg button.active[data-mode="off"] { background: #da3633; border-color: #da3633; }
   #ledger { padding: 10px; border: 1px solid #21262d; border-radius: 8px; background: #161b22; }
   .big { color: #3fb950; font-weight: bold; font-size: 15px; }
   .sites-mini { margin-top: 6px; }
@@ -36,13 +37,13 @@
   </div>
 
   <div class="row" id="ledger">
-    <div id="totals" class="dim">no savings recorded yet — press <b>⌥L</b> in a chat box</div>
+    <div id="totals" class="dim">no savings recorded yet — press <b class="kbd-combo">Alt+L</b> in a chat box</div>
     <div class="sites-mini dim" id="persite"></div>
     <div class="dim" style="margin-top:6px">all numbers are estimates (chars/4) ·
       <a id="reset">reset</a></div>
   </div>
 
-  <div class="row dim">Press <b>⌥L</b> (Alt+L) in the chat box · <b>preview</b> shows the diff first.</div>
+  <div class="row dim" id="hint"></div>
 
   <div class="foot">
     <a id="opt">Options</a>

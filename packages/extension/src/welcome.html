@@ -17,6 +17,7 @@
   .seg button { background: #161b22; color: #8b949e; border: 1px solid #30363d;
                 border-radius: 6px; padding: 4px 12px; font: inherit; cursor: pointer; }
   .seg button.active { background: #1a7f37; color: #fff; border-color: #1a7f37; }
+  .seg button.active[data-mode="off"] { background: #da3633; border-color: #da3633; }
   .dim { color: #8b949e; }
   #done { background: #1a7f37; color: #fff; border: none; border-radius: 8px;
           padding: 10px 22px; font: inherit; font-weight: bold; cursor: pointer; margin-top: 10px; }
@@ -30,7 +31,7 @@
   <div class="step">
     <h2><span class="num">1</span> What it does</h2>
     Every message to Claude / ChatGPT / Gemini costs tokens. Press
-    <kbd>⌥L</kbd> (Alt+L) in the chat box and iamtoolazy trims the filler —
+    <kbd class="kbd-combo">Alt+L</kbd> in the chat box and iamtoolazy trims the filler —
     <b>without touching code, URLs, numbers, or negations</b> — and shows
     you honest numbers about it. Short prompts? It tells you they're
     already lean and does nothing.
@@ -39,7 +40,7 @@
   <div class="step">
     <h2><span class="num">2</span> Pick a mode per site</h2>
     <div class="dim"><b>preview</b> shows a diff first (recommended) ·
-    <b>auto</b> applies instantly with Undo · <b>off</b> disables ⌥L there.</div>
+    <b>auto</b> applies instantly with Undo · <b>off</b> disables the shortcut there.</div>
     <div id="sites"></div>
   </div>
 
