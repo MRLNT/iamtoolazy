@@ -39,6 +39,12 @@ for (const k of document.querySelectorAll('.kbd-combo')) k.textContent = IS_MAC 
       });
     }
     paint();
+
+    document.getElementById('distill').addEventListener('click', async () => {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      try { await chrome.tabs.sendMessage(tab.id, { type: 'lazy-distill' }); } catch { /* tab not ready */ }
+      window.close();
+    });
   }
 
   // ── the honest ledger ──

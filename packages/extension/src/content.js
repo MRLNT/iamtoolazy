@@ -1,5 +1,5 @@
 // iamtoolazy — content entry (Fase 3.B: adapters + Alt+L).
-import { compress, estimateTokens } from '../../core/src/index.js';
+import { compress, estimateTokens, DISTILL_PROMPT } from '../../core/src/index.js';
 import { getAdapter } from './adapters/index.js';
 import { initHotkey } from './hotkey.js';
 
@@ -33,4 +33,18 @@ const site = location.hostname.replace(/^www\./, '');
   } catch { /* background may be asleep; badge is cosmetic */ }
 
   window.__iamtoolazy = { site, mode, adapter: adapter?.site || null, inputFound };
+
+  // 🧵 Distill this thread (Fase 3.E): the popup asks us to place the
+  // distill request in the composer. The AI already sees its own thread —
+  // no scraping needed. You review, you send, you paste the brief into a
+  // fresh chat. Zero network, zero magic.
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg?.type !== 'lazy-distill' || !adapter) return;
+    (async () => {
+      const el = adapter.findInput() || (await adapter.waitForInput(3000));
+      if (!el) return;
+      const lang = /^id\b/i.test(navigator.language) ? 'id' : 'en';
+      await adapter.setText(el, DISTILL_PROMPT[lang](400));
+    })();
+  });
 })();
