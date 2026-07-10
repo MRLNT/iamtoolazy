@@ -106,7 +106,7 @@ async function run(adapter, site) {
 
   // Root cause of the three-round "undefined" saga: compress() returns
   // `.text` — `.output` belongs to processPrompt(). Guarded forever:
-  const { text: output, removed } = compress(before, { level: 'full' });
+  const { text: output, removed, lang } = compress(before, { level: 'full' });
   if (typeof output !== 'string' || !output.trim()) {
     return toast('internal error: compressor returned nothing — please report this.');
   }
@@ -118,7 +118,7 @@ async function run(adapter, site) {
     // Fase 3.C: preview finally earns its name — show the diff, let the
     // user edit, and only Apply writes anything.
     return showPreview({
-      before, after: output, removed, bTok: b, aTok: a,
+      before, after: output, removed, bTok: b, aTok: a, lang,
       onApply: (finalText) => applyWrite(adapter, el, before, finalText, site, 'preview'),
       onCopy: (t) => copyToClipboard(t),
     });

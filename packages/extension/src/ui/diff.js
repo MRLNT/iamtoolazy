@@ -37,7 +37,7 @@ function renderBefore(before, removed) {
   return html;
 }
 
-export function showPreview({ before, after, removed, bTok, aTok, onApply, onCopy }) {
+export function showPreview({ before, after, removed, bTok, aTok, lang, onApply, onCopy }) {
   const host = document.createElement('div');
   host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;';
   const root = host.attachShadow({ mode: 'open' });
@@ -89,6 +89,7 @@ export function showPreview({ before, after, removed, bTok, aTok, onApply, onCop
       <div class="row">
         <button class="apply" id="apply">Apply</button>
         <button id="copy">Copy</button>
+        <button id="refine" style="display:none">✨ Refine</button>
         <button id="skip">Skip</button>
         <span class="right">Esc = skip · Enter / ⌘Enter = apply</span>
       </div>
@@ -106,6 +107,32 @@ export function showPreview({ before, after, removed, bTok, aTok, onApply, onCop
   });
   root.getElementById('skip').addEventListener('click', close);
   root.querySelector('.back').addEventListener('click', close);
+
+  // ✨ Refine (BYOK, Fase 3.D): only appears when a key is configured;
+  // the call runs in the background worker, never in the page.
+  (async () => {
+    try {
+      const { byok } = await chrome.storage.local.get('byok');
+      if (!byok?.apiKey) return;
+      const btn = root.getElementById('refine');
+      btn.style.display = '';
+      btn.addEventListener('click', () => {
+        btn.disabled = true;
+        btn.textContent = 'Refining…';
+        chrome.runtime.sendMessage({ type: 'lazy-refine', text: ta.value, lang }, (resp) => {
+          btn.disabled = false;
+          if (resp?.ok) {
+            ta.value = resp.text;
+            btn.textContent = 'Refined ✓';
+          } else {
+            btn.textContent = 'Refine failed';
+            console.info('🐨 refine error:', resp?.error);
+          }
+          setTimeout(() => (btn.textContent = '✨ Refine'), 2500);
+        });
+      });
+    } catch { /* storage unavailable — keep hidden */ }
+  })();
 
   // ── The overlay OWNS the keyboard while open (Fase 3.C field lesson) ──
   // Chat sites install global key listeners ("type anywhere → focus the
