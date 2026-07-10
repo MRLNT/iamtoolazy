@@ -1,10 +1,15 @@
 # iamtoolazy — browser extension (MV3)
 
-**Status: Fase 3.A — scaffold.** The build pipeline, manifest, settings
-storage, and popup shell are real; site adapters (3.B), the preview diff
-(3.C), the ledger dashboard + wizard + BYOK (3.D), history savers (3.E),
-and media savers (3.F) land next, per
-[docs/master-plan.md](../../docs/master-plan.md).
+**Status: Fase 3.C — preview diff live.** The build pipeline, manifest, settings
+storage, and popup shell are real. Site adapters (3.B ✅) and the preview
+diff with Enter send-guard (3.C ✅) are live; the ledger dashboard +
+wizard + BYOK (3.D), history savers (3.E), and media savers (3.F) land
+next, per [docs/master-plan.md](../../docs/master-plan.md).
+
+**Modes** (per site, from the popup): `preview` intercepts your Enter,
+shows exactly what would be removed, and — after you approve — **you**
+press Enter again to send (this extension never synthesizes a send).
+`auto` applies Alt+L instantly. `off` does nothing.
 
 ## Dev install (load unpacked)
 
@@ -31,6 +36,7 @@ Fase 3.C).
 | `storage` | Per-site mode + the local ledger. |
 | `activeTab` | Read the current tab's hostname **only when you open the popup**, so it can show a one-click mode toggle for that site. No background tab access, ever. |
 | `clipboardWrite` | Used ONLY in the Alt+L rescue path: if a site's editor rejects the in-place edit, your text is copied to the clipboard instead of being lost. Never reads the clipboard. |
+| `host_permissions` (api.anthropic.com, api.openai.com, generativelanguage.googleapis.com) | ONLY for the opt-in **✨ Refine** button, which sends your text to the ONE provider you configured with YOUR key. No key, no traffic — the extension never calls these hosts otherwise. |
 
 No host permissions beyond the three declared chat sites, no network
 permissions, no telemetry. Token counts inside the extension use the
