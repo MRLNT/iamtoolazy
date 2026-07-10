@@ -35,3 +35,4 @@ jobs:
       - run: npm ci
       - run: npm run build:ext
       - run: test -s packages/extension/dist/content.js
+      - run: test -s packages/extension/dist/background.js

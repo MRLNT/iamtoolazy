@@ -12,7 +12,7 @@
     "demo": "node scripts/demo.js",
     "sync:cli": "node scripts/sync-cli-core.mjs",
     "lint": "eslint packages/*/src packages/*/hooks scripts",
-    "build:ext": "esbuild packages/extension/src/content.js --bundle --format=iife --external:gpt-tokenizer/encoding/o200k_base --outfile=packages/extension/dist/content.js"
+    "build:ext": "esbuild packages/extension/src/content.js packages/extension/src/background.js --bundle --format=iife --external:gpt-tokenizer/encoding/o200k_base --outdir=packages/extension/dist"
   },
   "engines": {
     "node": ">=18"

@@ -15,7 +15,7 @@
     "clipboardWrite"
   ],
   "background": {
-    "service_worker": "src/background.js"
+    "service_worker": "dist/background.js"
   },
   "action": {
     "default_popup": "src/popup.html",
@@ -40,5 +40,10 @@
       ],
       "run_at": "document_idle"
     }
+  ],
+  "host_permissions": [
+    "https://api.anthropic.com/*",
+    "https://api.openai.com/*",
+    "https://generativelanguage.googleapis.com/*"
   ]
 }
