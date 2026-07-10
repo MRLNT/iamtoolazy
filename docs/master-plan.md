@@ -78,6 +78,13 @@ set 16/32/48/128, README header + mascot swap.
 - **Commits:** `feat(extension): ledger popup` ·
   `feat(extension): first-run wizard` · `feat(extension): BYOK refine (opt-in)`
 
+> **Decision record (2026-07-10):** BYOK/AI-refine was built, field-tested,
+> and then **removed from the extension** by maintainer decision: every
+> extension feature must be free and offline (no user can be surprised by
+> a bill), and the local rule-based refiner isn't good enough yet to be a
+> user-facing button. `refineWithLLM` stays in `@iamtoolazy/core` for
+> developers; improving the local refiner is a core-tuning backlog item.
+
 ### 3.E History savers: delta-context + distiller  [needs live testing]
 - **Files:** per-tab session memory; DCC (`delta.js`) drops sentences the
   thread already established before send; a "Distill thread" action
