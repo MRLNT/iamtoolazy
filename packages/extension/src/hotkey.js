@@ -6,10 +6,19 @@
 // Field-hardened: verified writes, honest failure toast with an explicit
 // Copy button, ledger entry only on verified success.
 
-import { compress, estimateTokens } from '../../core/src/index.js';
+import { compress, deltaCompress, estimateTokens } from '../../core/src/index.js';
 import { showPreview } from './ui/diff.js';
 
 let host, root, hideTimer;
+
+// Per-tab session memory (Fase 3.E): prompts you applied in THIS tab
+// since load. Powers delta-context: sentences the thread already
+// established get dropped before compression. Resets on refresh.
+const sessionHistory = [];
+const remember = (text) => {
+  sessionHistory.push(text);
+  if (sessionHistory.length > 20) sessionHistory.shift();
+};
 
 function toast(msg, buttons = []) {
   if (!host) {
@@ -83,6 +92,7 @@ async function applyWrite(adapter, el, before, finalText, site, kind) {
       }]
     );
   }
+  remember(before);
   const b = estimateTokens(before);
   const a = estimateTokens(finalText);
   const pct = Math.max(0, Math.round((1 - a / b) * 100));
@@ -111,12 +121,20 @@ async function run(adapter, site) {
   const before = adapter.getText(el);
   if (!before.trim()) return toast('nothing to compress.');
 
+  // Fase 3.E: drop sentences this tab's session already established,
+  // THEN compress. Both removal kinds land in the preview, color-coded.
+  const delta = deltaCompress(before, sessionHistory.join('\n'));
+
   // Root cause of the three-round "undefined" saga: compress() returns
   // `.text` — `.output` belongs to processPrompt(). Guarded forever:
-  const { text: output, removed } = compress(before, { level: 'full' });
+  const { text: output, removed: compressRemoved } = compress(delta.text, { level: 'full' });
   if (typeof output !== 'string' || !output.trim()) {
     return toast('internal error: compressor returned nothing — please report this.');
   }
+  const removed = [
+    ...delta.dropped.map((d) => ({ type: 'repeat', text: d.text })),
+    ...compressRemoved,
+  ];
   const b = estimateTokens(before);
   const a = estimateTokens(output);
   if (a >= b || output === before) return toast('already lean.');

@@ -16,7 +16,7 @@ function renderBefore(before, removed) {
   for (const r of removed || []) {
     const i = before.indexOf(r.text, cursor);
     if (i === -1) continue;
-    ranges.push({ start: i, end: i + r.text.length, cls: 'rm' });
+    ranges.push({ start: i, end: i + r.text.length, cls: r.type === 'repeat' ? 'dup' : 'rm' });
     cursor = i + r.text.length;
   }
   const lockRe = /```[\s\S]*?```|`[^`\n]+`|https?:\/\/\S+/g;
@@ -37,7 +37,9 @@ function renderBefore(before, removed) {
   return html;
 }
 
-export function showPreview({ before, after, removed, bTok, aTok, lang, onApply, onCopy }) {
+const IS_MAC = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+
+export function showPreview({ before, after, removed, bTok, aTok, onApply, onCopy }) {
   const host = document.createElement('div');
   host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;';
   const root = host.attachShadow({ mode: 'open' });
@@ -63,6 +65,8 @@ export function showPreview({ before, after, removed, bTok, aTok, lang, onApply,
               padding:10px 12px; white-space:pre-wrap; overflow-wrap:anywhere; }
       .rm   { background:rgba(248,81,73,.18); color:#ff7b72;
               text-decoration:line-through; border-radius:3px; padding:0 1px; }
+      .dup  { background:rgba(210,153,34,.18); color:#d29922;
+              text-decoration:line-through; border-radius:3px; padding:0 1px; }
       .lock { background:rgba(88,166,255,.14); color:#79c0ff; border-radius:3px;
               padding:0 1px; }
       textarea { width:100%; box-sizing:border-box; min-height:76px; resize:vertical;
@@ -82,6 +86,7 @@ export function showPreview({ before, after, removed, bTok, aTok, lang, onApply,
       <div class="sub">nothing is sent, nothing changed yet ·
         <span class="save">~${bTok} → ~${aTok} tok (−${pct}%, estimates)</span></div>
       <div class="label">before <span class="legend">· <span class="rm">removed</span>
+        <span class="dup">repeated context</span>
         <span class="lock">protected</span></span></div>
       <div class="pane" id="before"></div>
       <div class="label">after — edit freely, then apply</div>
@@ -89,9 +94,8 @@ export function showPreview({ before, after, removed, bTok, aTok, lang, onApply,
       <div class="row">
         <button class="apply" id="apply">Apply</button>
         <button id="copy">Copy</button>
-        <button id="refine" style="display:none">✨ Refine</button>
         <button id="skip">Skip</button>
-        <span class="right">Esc = skip · Enter / ⌘Enter = apply</span>
+        <span class="right">Esc = skip · Enter / ${IS_MAC ? '⌘Enter' : 'Ctrl+Enter'} = apply</span>
       </div>
     </div>`;
 
@@ -108,31 +112,6 @@ export function showPreview({ before, after, removed, bTok, aTok, lang, onApply,
   root.getElementById('skip').addEventListener('click', close);
   root.querySelector('.back').addEventListener('click', close);
 
-  // ✨ Refine (BYOK, Fase 3.D): only appears when a key is configured;
-  // the call runs in the background worker, never in the page.
-  (async () => {
-    try {
-      const { byok } = await chrome.storage.local.get('byok');
-      if (!byok?.apiKey) return;
-      const btn = root.getElementById('refine');
-      btn.style.display = '';
-      btn.addEventListener('click', () => {
-        btn.disabled = true;
-        btn.textContent = 'Refining…';
-        chrome.runtime.sendMessage({ type: 'lazy-refine', text: ta.value, lang }, (resp) => {
-          btn.disabled = false;
-          if (resp?.ok) {
-            ta.value = resp.text;
-            btn.textContent = 'Refined ✓';
-          } else {
-            btn.textContent = 'Refine failed';
-            console.info('🐨 refine error:', resp?.error);
-          }
-          setTimeout(() => (btn.textContent = '✨ Refine'), 2500);
-        });
-      });
-    } catch { /* storage unavailable — keep hidden */ }
-  })();
 
   // ── The overlay OWNS the keyboard while open (Fase 3.C field lesson) ──
   // Chat sites install global key listeners ("type anywhere → focus the
