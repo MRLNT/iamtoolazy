@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Welcome to iamtoolazy</title>
+<style>
+  body { max-width: 620px; margin: 48px auto; padding: 0 20px; background: #0d1117;
+         color: #c9d1d9; font: 14px/1.65 ui-monospace, SFMono-Regular, Menlo, monospace; }
+  h1 { color: #e6edf3; font-size: 22px; }
+  h1 img { vertical-align: -6px; margin-right: 10px; }
+  .step { border: 1px solid #21262d; border-radius: 10px; padding: 16px 18px; margin: 14px 0; }
+  .step h2 { margin: 0 0 8px; font-size: 14px; color: #e6edf3; }
+  .num { color: #3fb950; margin-right: 6px; }
+  kbd { background: #21262d; border: 1px solid #30363d; border-radius: 4px; padding: 1px 6px; }
+  .site { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+  .seg { display: flex; gap: 6px; }
+  .seg button { background: #161b22; color: #8b949e; border: 1px solid #30363d;
+                border-radius: 6px; padding: 4px 12px; font: inherit; cursor: pointer; }
+  .seg button.active { background: #1a7f37; color: #fff; border-color: #1a7f37; }
+  .dim { color: #8b949e; }
+  #done { background: #1a7f37; color: #fff; border: none; border-radius: 8px;
+          padding: 10px 22px; font: inherit; font-weight: bold; cursor: pointer; margin-top: 10px; }
+  a { color: #58a6ff; text-decoration: none; }
+</style>
+</head>
+<body>
+  <h1><img src="../icons/icon48.png" width="34" alt=""> Welcome to iamtoolazy</h1>
+  <p class="dim">Three things worth 60 seconds — then it stays out of your way.</p>
+
+  <div class="step">
+    <h2><span class="num">1</span> What it does</h2>
+    Every message to Claude / ChatGPT / Gemini costs tokens. Press
+    <kbd>⌥L</kbd> (Alt+L) in the chat box and iamtoolazy trims the filler —
+    <b>without touching code, URLs, numbers, or negations</b> — and shows
+    you honest numbers about it. Short prompts? It tells you they're
+    already lean and does nothing.
+  </div>
+
+  <div class="step">
+    <h2><span class="num">2</span> Pick a mode per site</h2>
+    <div class="dim"><b>preview</b> shows a diff first (recommended) ·
+    <b>auto</b> applies instantly with Undo · <b>off</b> disables ⌥L there.</div>
+    <div id="sites"></div>
+  </div>
+
+  <div class="step">
+    <h2><span class="num">3</span> Your data</h2>
+    Everything lives in this browser's local storage: your per-site modes
+    and a small ledger of savings (all numbers labeled estimates). Zero
+    telemetry, no accounts, nothing leaves your machine — unless you later
+    add your own API key for the optional ✨ Refine feature, which talks
+    only to the provider <i>you</i> configure.
+    <div class="dim" style="margin-top:8px">Source, docs, and the honest-numbers
+    policy: <a href="https://github.com/MRLNT/iamtoolazy" target="_blank">github.com/MRLNT/iamtoolazy</a></div>
+  </div>
+
+  <button id="done">Done — start saving 🐨</button>
+  <script src="welcome.js"></script>
+</body>
+</html>
