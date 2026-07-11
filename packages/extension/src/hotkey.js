@@ -121,11 +121,15 @@ async function run(adapter, site) {
   if (!before.trim()) return toast('nothing to compress.');
   // Session memory fills on INTENT (every Alt+L), not only on Apply —
   // field lesson 3.E: an "already lean" first turn must still seed delta.
+  // Field lesson 3.E.1: the CURRENT prompt must be excluded from its own
+  // history, or every sentence self-covers at 100%, everything drops, the
+  // never-empty guard fires, and turn 2 reads "already lean" forever.
+  const historyForDelta = sessionHistory.filter((h) => h !== before).join('\n');
   if (sessionHistory[sessionHistory.length - 1] !== before) remember(before);
 
   // Fase 3.E: drop sentences this tab's session already established,
   // THEN compress. Both removal kinds land in the preview, color-coded.
-  const delta = deltaCompress(before, sessionHistory.join('\n'));
+  const delta = deltaCompress(before, historyForDelta);
 
   // Root cause of the three-round "undefined" saga: compress() returns
   // `.text` — `.output` belongs to processPrompt(). Guarded forever:
