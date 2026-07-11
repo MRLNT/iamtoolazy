@@ -92,7 +92,6 @@ async function applyWrite(adapter, el, before, finalText, site, kind) {
       }]
     );
   }
-  remember(before);
   const b = estimateTokens(before);
   const a = estimateTokens(finalText);
   const pct = Math.max(0, Math.round((1 - a / b) * 100));
@@ -120,6 +119,9 @@ async function run(adapter, site) {
   if (!el) return toast('composer not found — report this, selectors may have rotted.');
   const before = adapter.getText(el);
   if (!before.trim()) return toast('nothing to compress.');
+  // Session memory fills on INTENT (every Alt+L), not only on Apply —
+  // field lesson 3.E: an "already lean" first turn must still seed delta.
+  if (sessionHistory[sessionHistory.length - 1] !== before) remember(before);
 
   // Fase 3.E: drop sentences this tab's session already established,
   // THEN compress. Both removal kinds land in the preview, color-coded.
