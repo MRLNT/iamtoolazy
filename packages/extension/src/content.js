@@ -2,6 +2,7 @@
 import { compress, estimateTokens, DISTILL_PROMPT } from '../../core/src/index.js';
 import { getAdapter } from './adapters/index.js';
 import { initHotkey } from './hotkey.js';
+import { initMediaSavers } from './media.js';
 
 const site = location.hostname.replace(/^www\./, '');
 
@@ -16,6 +17,8 @@ const site = location.hostname.replace(/^www\./, '');
   if (adapter) {
     initHotkey(adapter, adapter.site);
     inputFound = !!(await adapter.waitForInput(10000));
+    // Fase 3.F: media savers ride along unless the site is switched off.
+    if (mode !== 'off') initMediaSavers(adapter.site);
   }
 
   // Truth-serum self-test: print the REAL compressed string, so a broken

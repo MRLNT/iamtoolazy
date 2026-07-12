@@ -1,10 +1,10 @@
 # iamtoolazy — browser extension (MV3)
 
-**Status: Fase 3.C — preview diff live.** The build pipeline, manifest, settings
-storage, and popup shell are real. Site adapters (3.B ✅) and the preview
-diff with Enter send-guard (3.C ✅) are live; the ledger dashboard +
-wizard + BYOK (3.D), history savers (3.E), and media savers (3.F) land
-next, per [docs/master-plan.md](../../docs/master-plan.md).
+**Status: Fase 3.F — media savers live.** Adapters (3.B ✅), preview diff
+(3.C ✅), popup ledger + wizard (3.D ✅), delta-context session memory +
+Distill (3.E ✅), and media savers (3.F ✅) are live. Privacy docs (3.G)
+and the v0.5.0 beta (3.H) land next, per
+[docs/master-plan.md](../../docs/master-plan.md).
 
 **Modes** (per site, from the popup): `preview` intercepts your Enter,
 shows exactly what would be removed, and — after you approve — **you**
@@ -28,6 +28,18 @@ https://gemini.google.com and check DevTools console for the
 self-test). The toolbar popup shows the per-site mode; the options page
 lets you change it (preview / auto / off — the modes take real effect in
 Fase 3.C).
+
+## Media savers (Fase 3.F)
+
+**Image downscale, confirm-first.** Models cap useful visual detail —
+above ~1092 px on the long side, Claude sees no extra detail; the pixels
+only bill vision tokens. When you attach an oversized image, the site's
+upload is held and a pill shows the estimated saving (e.g. a 4K
+screenshot: ~1600 → ~950 tok). **Downscale** resizes on a local canvas
+and hands the smaller file to the site; **Keep original** (or Esc)
+passes everything through untouched. On chatgpt.com no offer appears at
+all: OpenAI rescales images server-side, so a client resize saves ~zero
+tokens there — we don't sell savings that don't exist.
 
 ## Permissions
 

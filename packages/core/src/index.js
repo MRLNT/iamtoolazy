@@ -8,6 +8,7 @@ export { refine, extract, classify } from './refiner.js';
 export { estimateTokens, initTokenizer, estimatorMode, imageTokens, resizeSavings } from './estimator.js';
 export { decideInjection, attach, DIRECTIVES } from './injector.js';
 export { deltaCompress } from './delta.js';
+export { planImageDownscale } from './media.js';
 export { createCalibration, observe, getParams } from './calibrator.js';
 export { DISTILL_PROMPT } from './distiller.js';
 export { refineWithLLM, REFINE_META_PROMPT } from './llm.js';
