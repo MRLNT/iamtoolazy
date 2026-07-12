@@ -9,6 +9,7 @@ export { estimateTokens, initTokenizer, estimatorMode, imageTokens, resizeSaving
 export { decideInjection, attach, DIRECTIVES } from './injector.js';
 export { deltaCompress } from './delta.js';
 export { planImageDownscale } from './media.js';
+export { normalizePdfText, PDF_PAGE_TOKENS } from './pdftext.js';
 export { createCalibration, observe, getParams } from './calibrator.js';
 export { DISTILL_PROMPT } from './distiller.js';
 export { refineWithLLM, REFINE_META_PROMPT } from './llm.js';

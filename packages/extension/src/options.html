@@ -26,6 +26,15 @@
   Everything stays in this browser's local storage — zero network, zero
   accounts, zero cost.</p>
   <div id="sites"></div>
+  <div class="site">
+    <span>PDF &rarr; text <span class="dim">(consent per file)</span></span>
+    <input type="checkbox" id="pdftext">
+  </div>
+  <p class="dim">Off by default. When on, attaching a PDF offers to extract
+  its text locally instead of uploading the file (&asymp;1,500+ tokens per
+  page as a file, estimates). Uses a bundled pdf.js module (&asymp;1.3 MB)
+  that loads only when you click Extract &mdash; still zero network, the
+  file never leaves this tab.</p>
   <p id="saved">saved ✓</p>
   <script src="options.js"></script>
 </body>

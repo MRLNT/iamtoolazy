@@ -17,10 +17,29 @@
 //  - all numbers labeled estimates; ledger entries carry kind 'image'
 //  - zero network: decode, canvas, re-encode — everything in this tab
 
-import { planImageDownscale } from '../../core/src/index.js';
+import { planImageDownscale, normalizePdfText, PDF_PAGE_TOKENS, estimateTokens } from '../../core/src/index.js';
 
 const MAX_SIDE = 1092; // Claude's effective detail ceiling; see core/media.js
 const IMG_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
+
+// PDF→text is double-gated: this Options toggle (off by default — it
+// admits a ~1.3 MB pdfjs module) AND a per-file confirm. The toggle is
+// cached here because the event hold must be synchronous; storage
+// changes keep the cache live.
+let pdfEnabled = false;
+async function loadPdfFlag() {
+  try {
+    const { settings = {} } = await chrome.storage.local.get('settings');
+    pdfEnabled = settings.pdfText === true;
+  } catch { pdfEnabled = false; }
+}
+try {
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && changes.settings) {
+      pdfEnabled = changes.settings.newValue?.pdfText === true;
+    }
+  });
+} catch { /* storage bridge gone; flag stays as-is */ }
 
 // Inputs whose next change event must pass through untouched (our own
 // re-dispatch after Downscale / Keep original).
@@ -168,15 +187,87 @@ async function decide(input, files, site) {
   }
 }
 
-export function initMediaSavers(site) {
+async function decidePdf(input, files, site, adapter) {
+  let released = false;
+  const release = (out) => {
+    if (released) return;
+    released = true;
+    releaseWith(input, out || files);
+  };
+  try {
+    const pdfs = files.filter((f) => f.type === 'application/pdf');
+    const others = files.filter((f) => f.type !== 'application/pdf');
+    const mb = (pdfs.reduce((a, f) => a + f.size, 0) / (1024 * 1024)).toFixed(1);
+    overlay(
+      `🐨 <b>PDF attached — nothing uploaded yet</b><br>` +
+      pdfs.map((f) => `<span class="dim">${f.name} · ${(f.size / (1024 * 1024)).toFixed(1)} MB</span>`).join('<br>') +
+      `<br>as a file, a PDF bills roughly ~${PDF_PAGE_TOKENS}+ tok <i>per page</i> (estimates).` +
+      `<br><span class="dim">extract the text layer instead? runs locally in this tab — the file never uploads.</span>`,
+      [
+        {
+          label: 'Extract text', primary: true, onClick: async () => {
+            try {
+              const mod = await import(chrome.runtime.getURL('dist/pdf-extract.js'));
+              const blocks = [];
+              let pageTotal = 0;
+              let emptyTotal = 0;
+              for (const f of pdfs) {
+                const { pages } = await mod.extractPdfText(await f.arrayBuffer());
+                const { text, pageCount, emptyPages } = normalizePdfText(pages, { name: f.name });
+                pageTotal += pageCount;
+                emptyTotal += emptyPages;
+                if (text) blocks.push(text);
+              }
+              if (!blocks.length) {
+                overlay(
+                  `🐨 <b>no text layer found</b> (${mb} MB, likely a scan).<br>` +
+                  `<span class="dim">nothing extracted — uploading the original unchanged.</span>`,
+                  [{ label: 'OK', primary: true, onClick: () => release() }]
+                );
+                return;
+              }
+              const el = adapter?.findInput?.();
+              if (!el) { release(); return; }
+              const combined = blocks.join('\n\n');
+              const existing = adapter.getText(el);
+              const wrote = await adapter.setText(el, existing.trim() ? `${existing}\n\n${combined}` : combined);
+              if (!wrote.ok) { release(); return; }
+              release(others); // the PDFs never upload; other files pass through
+              const afterTok = estimateTokens(combined);
+              const beforeTok = pageTotal * PDF_PAGE_TOKENS;
+              appendLedger({ ts: Date.now(), site, kind: 'pdf', beforeTok, afterTok });
+              overlay(
+                `🐨 <b>extracted ${pageTotal} page${pageTotal === 1 ? '' : 's'} → ~${afterTok} tok as text</b>` +
+                ` <span class="dim">(vs ~${beforeTok}+ as a file, estimates${emptyTotal ? ` · ${emptyTotal} empty page${emptyTotal === 1 ? '' : 's'} skipped` : ''})</span><br>` +
+                `<span class="dim">review it in the composer — nothing sent yet.</span>`,
+                [{ label: 'OK', primary: true, onClick: () => {} }]
+              );
+            } catch {
+              release();
+            }
+          },
+        },
+        { label: 'Upload PDF', onClick: () => release() },
+      ]
+    );
+  } catch {
+    release();
+  }
+}
+
+export function initMediaSavers(adapter, site) {
+  loadPdfFlag();
   document.addEventListener('change', (e) => {
     const input = e.target;
     if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
     if (passOnce.has(input)) { passOnce.delete(input); return; }
     const files = [...(input.files || [])];
-    if (!files.some((f) => IMG_TYPES.has(f.type))) return; // not ours — don't touch
+    const hasPdf = pdfEnabled && files.some((f) => f.type === 'application/pdf');
+    const hasImg = files.some((f) => IMG_TYPES.has(f.type));
+    if (!hasPdf && !hasImg) return; // not ours — don't touch
     // HOLD the event synchronously; everything after this is async.
     e.stopImmediatePropagation();
-    decide(input, files, site);
+    if (hasPdf) decidePdf(input, files, site, adapter);
+    else decide(input, files, site);
   }, true);
 }

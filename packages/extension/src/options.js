@@ -32,4 +32,14 @@ for (const k of document.querySelectorAll('.kbd-combo')) {
     row.append(label, sel);
     root.appendChild(row);
   }
+
+  const pdfBox = document.getElementById('pdftext');
+  pdfBox.checked = settings.pdfText === true;
+  pdfBox.addEventListener('change', async () => {
+    settings.pdfText = pdfBox.checked;
+    await chrome.storage.local.set({ settings });
+    const s = document.getElementById('saved');
+    s.style.visibility = 'visible';
+    setTimeout(() => (s.style.visibility = 'hidden'), 1200);
+  });
 })();

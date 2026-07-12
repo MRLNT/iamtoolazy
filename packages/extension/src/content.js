@@ -18,7 +18,7 @@ const site = location.hostname.replace(/^www\./, '');
     initHotkey(adapter, adapter.site);
     inputFound = !!(await adapter.waitForInput(10000));
     // Fase 3.F: media savers ride along unless the site is switched off.
-    if (mode !== 'off') initMediaSavers(adapter.site);
+    if (mode !== 'off') initMediaSavers(adapter, adapter.site);
   }
 
   // Truth-serum self-test: print the REAL compressed string, so a broken

@@ -2,7 +2,7 @@
   "name": "iamtoolazy",
   "version": "0.4.0",
   "private": true,
-  "description": "Too lazy to waste tokens. Save input, output, and media tokens on Claude, ChatGPT, Gemini \u2014 web chat and CLI.",
+  "description": "Too lazy to waste tokens. Save input, output, and media tokens on Claude, ChatGPT, Gemini — web chat and CLI.",
   "type": "module",
   "workspaces": [
     "packages/*"
@@ -12,7 +12,7 @@
     "demo": "node scripts/demo.js",
     "sync:cli": "node scripts/sync-cli-core.mjs",
     "lint": "eslint packages/*/src packages/*/hooks scripts",
-    "build:ext": "esbuild packages/extension/src/content.js packages/extension/src/background.js --bundle --format=iife --external:gpt-tokenizer/encoding/o200k_base --outdir=packages/extension/dist"
+    "build:ext": "esbuild packages/extension/src/content.js packages/extension/src/background.js --bundle --format=iife --external:gpt-tokenizer/encoding/o200k_base --outdir=packages/extension/dist && esbuild packages/extension/src/pdf-extract.js --bundle --format=esm --minify --outfile=packages/extension/dist/pdf-extract.js"
   },
   "engines": {
     "node": ">=18"
@@ -22,5 +22,8 @@
     "@eslint/js": "^10.0.1",
     "esbuild": "^0.28.1",
     "eslint": "^10.6.0"
+  },
+  "dependencies": {
+    "pdfjs-dist": "^3.11.174"
   }
 }

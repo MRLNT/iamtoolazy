@@ -41,6 +41,15 @@ passes everything through untouched. On chatgpt.com no offer appears at
 all: OpenAI rescales images server-side, so a client resize saves ~zero
 tokens there — we don't sell savings that don't exist.
 
+**PDF → text, double consent (off by default).** As an uploaded file a
+PDF bills roughly ~1,500+ tokens *per page* (estimates, low end of the
+documented range). With the Options toggle on, attaching a PDF offers to
+extract its text layer locally instead — the file itself never uploads.
+The pdf.js module (~1.4 MB) ships inside the extension and loads only
+when you click **Extract text**; scanned PDFs with no text layer are
+reported honestly and uploaded unchanged. Extracted text lands in the
+composer for review — nothing is sent until you send it.
+
 ## Permissions
 
 | Permission | Why |
