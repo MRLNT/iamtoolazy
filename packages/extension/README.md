@@ -109,6 +109,12 @@ composer for review — nothing is sent until you send it.
 | `storage` | Per-site mode + the local ledger. |
 | `activeTab` | Read the current tab's hostname **only when you open the popup**, so it can show a one-click mode toggle for that site. No background tab access, ever. |
 | `clipboardWrite` | Used ONLY in the Alt+L rescue path: if a site's editor rejects the in-place edit, your text is copied to the clipboard instead of being lost. Never reads the clipboard. |
+| content scripts on 3 chat origins | The entire product — claude.ai, chatgpt.com, gemini.google.com. No `<all_urls>`. |
+| `web_accessible_resources`: `dist/pdf-extract.js` | The lazy, consent-gated pdf.js module; scoped to the 3 origins only. |
+
+Full details: [PRIVACY.md](../../PRIVACY.md) (what is stored, where) and
+[THREAT-MODEL.md](../../THREAT-MODEL.md) (assets, adversaries,
+mitigations — including the pdf.js CVE analysis).
 
 No host permissions beyond the three declared chat sites, no network
 permissions, no telemetry. Token counts inside the extension use the
