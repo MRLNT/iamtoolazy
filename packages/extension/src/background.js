@@ -17,7 +17,9 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 });
 
 // Per-tab badge: 'on' when the composer was found, '!' when not.
+// Plus the options bridge: content scripts can't open the options page.
 chrome.runtime.onMessage.addListener((msg, sender) => {
+  if (msg?.type === 'lazy-open-options') { chrome.runtime.openOptionsPage(); return; }
   if (msg?.type !== 'lazy-status' || !sender.tab?.id) return;
   chrome.action.setBadgeText({ tabId: sender.tab.id, text: msg.inputFound ? 'on' : '!' });
   chrome.action.setBadgeBackgroundColor({

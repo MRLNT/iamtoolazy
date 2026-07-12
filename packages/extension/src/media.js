@@ -17,9 +17,17 @@
 //  - all numbers labeled estimates; ledger entries carry kind 'image'
 //  - zero network: decode, canvas, re-encode — everything in this tab
 
-import { planImageDownscale, normalizePdfText, PDF_PAGE_TOKENS, estimateTokens } from '../../core/src/index.js';
+import {
+  planImageDownscale, normalizePdfText, PDF_PAGE_TOKENS, estimateTokens,
+  MEDIA_LIMITS, withinPdfLimits,
+} from '../../core/src/index.js';
 
-const MAX_SIDE = 1092; // Claude's effective detail ceiling; see core/media.js
+// Detail ceiling per provider (see core/media.js + core/estimator.js):
+// Claude ~1092px; Gemini 768px (its 768-tile boundary — one tile is the
+// floor). chatgpt.com maps to 'openai', where server-side rescaling makes
+// client downscales worthless — savings compute to ~0 and no pill appears.
+const PROVIDER = { 'claude.ai': 'claude', 'chatgpt.com': 'openai', 'gemini.google.com': 'gemini' };
+const MAX_SIDE_OF = { claude: 1092, openai: 1092, gemini: 768 };
 const IMG_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 
 // PDF→text is double-gated: this Options toggle (off by default — it
@@ -27,10 +35,12 @@ const IMG_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 // cached here because the event hold must be synchronous; storage
 // changes keep the cache live.
 let pdfEnabled = false;
+let pdfHintShown = true; // assume shown until storage says otherwise
 async function loadPdfFlag() {
   try {
-    const { settings = {} } = await chrome.storage.local.get('settings');
-    pdfEnabled = settings.pdfText === true;
+    const store = await chrome.storage.local.get(['settings', 'pdfHintShown']);
+    pdfEnabled = store.settings?.pdfText === true;
+    pdfHintShown = store.pdfHintShown === true;
   } catch { pdfEnabled = false; }
 }
 try {
@@ -143,14 +153,18 @@ async function decide(input, files, site) {
     releaseWith(input, out || files);
   };
   try {
-    const images = files.filter((f) => IMG_TYPES.has(f.type));
+    // Guardrail: don't decode monsters locally (MEDIA_LIMITS.imageMaxMB);
+    // they pass through untouched — the site's own limits take it from here.
+    const images = files.filter((f) =>
+      IMG_TYPES.has(f.type) && f.size <= MEDIA_LIMITS.imageMaxMB * 1024 * 1024);
     const dims = await Promise.all(images.map(readDims));
     const known = [];
     images.forEach((f, i) => { if (dims[i]) known.push({ file: f, name: f.name, ...dims[i] }); });
     if (!known.length) return release();
 
-    const provider = site === 'chatgpt.com' ? 'openai' : 'claude';
-    const plan = planImageDownscale(known, { maxSide: MAX_SIDE, provider });
+    const provider = PROVIDER[site] || 'claude';
+    const maxSide = MAX_SIDE_OF[provider];
+    const plan = planImageDownscale(known, { maxSide, provider });
     if (!plan.shouldOffer) return release();
 
     // plan.items is index-aligned with `known` — pair by position, never
@@ -166,7 +180,7 @@ async function decide(input, files, site) {
         `<span class="dim">${i.name}: ${i.width}×${i.height} → ${i.targetWidth}×${i.targetHeight}</span>`
       ).join('<br>') +
       `<br>vision tokens ~${plan.totalBefore} → <span class="save">~${plan.totalAfter} (−${pct}%, estimates)</span>` +
-      `<br><span class="dim">above ~${MAX_SIDE}px the model sees no extra detail — it only costs more.</span>`,
+      `<br><span class="dim">above ~${maxSide}px the model sees no extra detail — it only costs more.</span>`,
       [
         {
           label: 'Downscale', primary: true, onClick: async () => {
@@ -198,6 +212,16 @@ async function decidePdf(input, files, site, adapter) {
     const pdfs = files.filter((f) => f.type === 'application/pdf');
     const others = files.filter((f) => f.type !== 'application/pdf');
     const mb = (pdfs.reduce((a, f) => a + f.size, 0) / (1024 * 1024)).toFixed(1);
+    // Guardrail: local extraction has limits; the upload itself never does.
+    const sizeGate = withinPdfLimits({ sizeBytes: pdfs.reduce((a, f) => a + f.size, 0) });
+    if (!sizeGate.ok) {
+      overlay(
+      `🐨 <b>PDF too large for local extraction</b> <span class="dim">(${sizeGate.reason})</span><br>` +
+      `<span class="dim">uploading unchanged — the site's own limits apply from here.</span>`,
+        [{ label: 'OK', primary: true, onClick: () => release() }]
+      );
+      return;
+    }
     overlay(
       `🐨 <b>PDF attached — nothing uploaded yet</b><br>` +
       pdfs.map((f) => `<span class="dim">${f.name} · ${(f.size / (1024 * 1024)).toFixed(1)} MB</span>`).join('<br>') +
@@ -212,7 +236,16 @@ async function decidePdf(input, files, site, adapter) {
               let pageTotal = 0;
               let emptyTotal = 0;
               for (const f of pdfs) {
-                const { pages } = await mod.extractPdfText(await f.arrayBuffer());
+                const { pages, numPages } = await mod.extractPdfText(await f.arrayBuffer());
+                const pageGate = withinPdfLimits({ sizeBytes: f.size, numPages });
+                if (!pageGate.ok) {
+                  overlay(
+                    `🐨 <b>PDF too long for local extraction</b> <span class="dim">(${pageGate.reason})</span><br>` +
+                    `<span class="dim">uploading unchanged — the site's own limits apply from here.</span>`,
+                    [{ label: 'OK', primary: true, onClick: () => release() }]
+                  );
+                  return;
+                }
                 const { text, pageCount, emptyPages } = normalizePdfText(pages, { name: f.name });
                 pageTotal += pageCount;
                 emptyTotal += emptyPages;
@@ -255,6 +288,26 @@ async function decidePdf(input, files, site, adapter) {
   }
 }
 
+/** One-time discoverability hint: PDF attached but the feature is off.
+ *  NON-blocking by design — the upload proceeds normally underneath. */
+function maybeShowPdfHint() {
+  if (pdfHintShown) return;
+  pdfHintShown = true; // session guard first, storage second
+  try { chrome.storage.local.set({ pdfHintShown: true }); } catch { /* cosmetic */ }
+  overlay(
+    `🐨 <b>tip: this PDF is uploading as a file</b> <span class="dim">(~${PDF_PAGE_TOKENS}+ tok per page, estimates)</span><br>` +
+    `<span class="dim">iamtoolazy can extract PDF text locally instead — free, nothing leaves this tab. one-time tip, never shown again.</span>`,
+    [
+      {
+        label: 'Open options', primary: true, onClick: () => {
+          try { chrome.runtime.sendMessage({ type: 'lazy-open-options' }); } catch { /* bridge gone */ }
+        },
+      },
+      { label: 'Got it', onClick: () => {} },
+    ]
+  );
+}
+
 export function initMediaSavers(adapter, site) {
   loadPdfFlag();
   document.addEventListener('change', (e) => {
@@ -262,8 +315,10 @@ export function initMediaSavers(adapter, site) {
     if (!(input instanceof HTMLInputElement) || input.type !== 'file') return;
     if (passOnce.has(input)) { passOnce.delete(input); return; }
     const files = [...(input.files || [])];
-    const hasPdf = pdfEnabled && files.some((f) => f.type === 'application/pdf');
+    const anyPdf = files.some((f) => f.type === 'application/pdf');
+    const hasPdf = pdfEnabled && anyPdf;
     const hasImg = files.some((f) => IMG_TYPES.has(f.type));
+    if (anyPdf && !pdfEnabled) maybeShowPdfHint(); // non-blocking
     if (!hasPdf && !hasImg) return; // not ours — don't touch
     // HOLD the event synchronously; everything after this is async.
     e.stopImmediatePropagation();

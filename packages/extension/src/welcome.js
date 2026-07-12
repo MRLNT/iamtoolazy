@@ -33,6 +33,18 @@ for (const k of document.querySelectorAll('.kbd-combo')) {
     row.append(label, seg);
     root.appendChild(row);
   }
+  const copyBtn = document.getElementById('copySample');
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(document.getElementById('sample').value);
+      copyBtn.textContent = 'Copied ✓';
+      setTimeout(() => (copyBtn.textContent = 'Copy'), 1500);
+    } catch {
+      document.getElementById('sample').select();
+      copyBtn.textContent = 'Press ⌘C';
+    }
+  });
+
   document.getElementById('done').addEventListener('click', async () => {
     await chrome.storage.local.set({ wizardDone: true });
     window.close();
