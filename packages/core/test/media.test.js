@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { planImageDownscale } from '../src/media.js';
+import { planImageDownscale, withinPdfLimits } from '../src/media.js';
+import { imageTokens } from '../src/estimator.js';
 
 test('media: 4K screenshot is worth downscaling, target respects maxSide', () => {
   const plan = planImageDownscale([{ name: 'shot.png', width: 3840, height: 2160 }]);
@@ -46,4 +47,29 @@ test('media: openai normalizes internally — no fake savings, no offer', () => 
   const plan = planImageDownscale([{ width: 4000, height: 3000 }], { provider: 'openai' });
   assert.equal(plan.items[0].saved, 0);
   assert.equal(plan.shouldOffer, false);
+});
+
+test('gemini: doc example 600x400 costs one 768 tile', () => {
+  // worked example from ai.google.dev token docs
+  assert.equal(imageTokens(600, 400, { provider: 'gemini' }), 258);
+  assert.equal(imageTokens(300, 300, { provider: 'gemini' }), 258); // ≤384 flat
+});
+
+test('gemini: 4K portrait is capped at 3072 then tiled; 768 downscale hits the one-tile floor', () => {
+  const plan = planImageDownscale([{ width: 4672, height: 7008 }], { provider: 'gemini' });
+  const [it] = plan.items;
+  assert.equal(it.before, 3096); // 2048×3072 after cap → 3×4 tiles × 258
+  assert.equal(it.after, 258); // ≤768 both dims → single tile
+  assert.ok(Math.max(it.targetWidth, it.targetHeight) <= 768); // gemini default maxSide
+  assert.equal(plan.shouldOffer, true);
+});
+
+test('limits: PDF guardrails — size and page caps, pass-through semantics', () => {
+  assert.equal(withinPdfLimits({ sizeBytes: 1024 * 1024 }).ok, true);
+  const big = withinPdfLimits({ sizeBytes: 26 * 1024 * 1024 });
+  assert.equal(big.ok, false);
+  assert.match(big.reason, /25 MB/);
+  const long = withinPdfLimits({ sizeBytes: 1024, numPages: 301 });
+  assert.equal(long.ok, false);
+  assert.match(long.reason, /300 pages/);
 });

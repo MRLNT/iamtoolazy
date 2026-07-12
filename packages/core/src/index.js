@@ -8,7 +8,7 @@ export { refine, extract, classify } from './refiner.js';
 export { estimateTokens, initTokenizer, estimatorMode, imageTokens, resizeSavings } from './estimator.js';
 export { decideInjection, attach, DIRECTIVES } from './injector.js';
 export { deltaCompress } from './delta.js';
-export { planImageDownscale } from './media.js';
+export { planImageDownscale, MEDIA_LIMITS, withinPdfLimits } from './media.js';
 export { normalizePdfText, PDF_PAGE_TOKENS } from './pdftext.js';
 export { createCalibration, observe, getParams } from './calibrator.js';
 export { DISTILL_PROMPT } from './distiller.js';

@@ -54,9 +54,12 @@ export function estimatorMode() {
  * Claude: ≈ (w×h)/750, capped (~1.15 MP is the effective ceiling).
  * OpenAI (high detail): scale into 2048px box, shortest side 768, then
  * 85 + 170 per 512px tile. Low detail: flat 85.
+ * Gemini (2.x): ≤384px both dims = flat 258; larger images are scaled to
+ * fit 3072×3072 (aspect preserved), then tiled into 768×768 crops at
+ * 258 tokens each — per ai.google.dev/gemini-api/docs/tokens.
  * @param {number} width
  * @param {number} height
- * @param {{provider?: 'claude'|'openai', detail?: 'high'|'low'}} [opts]
+ * @param {{provider?: 'claude'|'openai'|'gemini', detail?: 'high'|'low'}} [opts]
  */
 export function imageTokens(width, height, opts = {}) {
   const provider = opts.provider || 'claude';
@@ -65,6 +68,13 @@ export function imageTokens(width, height, opts = {}) {
 
   if (provider === 'claude') {
     return Math.min(1600, Math.ceil((w * h) / 750));
+  }
+
+  if (provider === 'gemini') {
+    if (w <= 384 && h <= 384) return 258;
+    const fit = 3072 / Math.max(w, h);
+    if (fit < 1) { w = Math.round(w * fit); h = Math.round(h * fit); }
+    return Math.ceil(w / 768) * Math.ceil(h / 768) * 258;
   }
 
   if (opts.detail === 'low') return 85;
