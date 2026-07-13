@@ -1,0 +1,33 @@
+name: release
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm ci
+      # a release ships only from a green tree — same gates as ci.yml
+      - run: npm test
+      - run: npm run lint
+      - run: npm run build:ext
+      - run: test -s packages/extension/dist/content.js
+      - run: test -s packages/extension/dist/background.js
+      - run: test -s packages/extension/dist/pdf-extract.js
+      - name: Zip the extension (load-unpacked ready)
+        run: |
+          cd packages/extension
+          zip -r "../../iamtoolazy-extension-${GITHUB_REF_NAME}.zip" \
+            manifest.json dist icons src README.md -x "*.DS_Store"
+          cd ../..
+          unzip -l "iamtoolazy-extension-${GITHUB_REF_NAME}.zip"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: iamtoolazy-extension-*.zip
+          generate_release_notes: true

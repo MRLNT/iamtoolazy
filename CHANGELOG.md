@@ -2,6 +2,41 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com) · Versioning: semver.
 
+## [0.5.0] — 2026-07-12
+
+First public beta of the **browser extension** (MV3) for claude.ai,
+chatgpt.com, and gemini.google.com.
+
+### Added
+- Alt+L (⌥L) with per-site modes: **preview** (editable diff: removed /
+  repeated-context / protected), **auto** with Undo, **off**
+- Delta-context session memory: sentences the conversation already
+  established are trimmed on later turns (per tab, in-memory only)
+- 🧵 Distill-this-thread button (EN/ID) in the popup
+- Media savers, confirm-first: image downscale with per-provider token
+  math (Claude ~1092px ceiling; Gemini 768-tile formula from the
+  official docs; chatgpt.com honestly gets no offer — OpenAI rescales
+  server-side), and consent-gated PDF→text extraction via a bundled,
+  lazy-loaded pdf.js (double consent, file never uploads)
+- Local-processing guardrails with honest messaging (image 40 MB;
+  PDF 25 MB / 300 pages — oversized files always pass through)
+- First-run wizard with a hands-on "Try it right now" step, popup
+  how-to strip, honest ledger dashboard (estimates, capped at 200
+  entries, numbers only — never text)
+- `PRIVACY.md` and `THREAT-MODEL.md` (including the pdf.js
+  CVE-2024-4367 analysis and mitigations)
+- Release CI: tagged builds attach a load-unpacked-ready extension zip
+
+### Changed
+- BYOK/AI-refine removed from the extension entirely: the extension is
+  **zero-network** by construction (`host_permissions` deleted); LLM
+  refine remains available in the library only
+
+### Fixed
+- Session memory now fills on every Alt+L (remember-on-intent), and the
+  current prompt is excluded from its own delta history (turn 2 no
+  longer reads "already lean")
+
 ## [0.3.1] — 2026-07-07
 
 ### Changed — BREAKING for plugin users

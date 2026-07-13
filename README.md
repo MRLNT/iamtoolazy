@@ -65,21 +65,29 @@ pause. Details: [packages/cli](packages/cli/README.md).
 ### Door 2 — Browser extension (beta)
 
 Works on **claude.ai**, **chatgpt.com**, and **gemini.google.com**.
-Until the Web Store release (Fase 3.H), install the developer way:
+Web Store listing is in review; until then, two ways in:
+
+**Easy way (no build tools):** grab
+[`iamtoolazy-extension-v0.5.0.zip` from the latest release](https://github.com/MRLNT/iamtoolazy/releases/latest),
+unzip it, then: `chrome://extensions` → enable **Developer mode**
+(top-right) → **Load unpacked** → select the unzipped folder. A welcome
+tab opens with a 30-second hands-on tour.
+
+**Dev way (from source):**
 
 ```bash
 git clone https://github.com/MRLNT/iamtoolazy && cd iamtoolazy
 npm install && npm run build:ext
 ```
 
-Then: `chrome://extensions` → enable **Developer mode** → **Load
-unpacked** → select the `packages/extension` folder.
+then Load unpacked → the `packages/extension` folder.
 
-**How to use it:** type your prompt in the chat box, then press
-**Alt+L** (**⌥L** on Mac). Your text compresses in place, a koala toast
-shows the honest savings, and **Undo** brings the original back.
-A green `on` badge on the toolbar icon means the extension found the
-chat box. Automatic mode with a preview diff arrives in Fase 3.C.
+**How to use it:** press **Alt+L** (**⌥L** on Mac) in the chat box → a
+preview diff shows exactly what gets trimmed → **Apply**. Attach a big
+image and a pill offers to downscale it before upload; PDF→text lives in
+Options (off by default); the popup's 🧵 **Distill** shrinks long
+threads. Privacy: [PRIVACY.md](PRIVACY.md) ·
+[THREAT-MODEL.md](THREAT-MODEL.md) — zero network, zero telemetry.
 Details: [packages/extension](packages/extension/README.md).
 
 ### Door 3 — The library

@@ -75,6 +75,8 @@ chats?" — written to a security-professional standard.
   line [1][2]; the multilingual encoder covers Indonesian.
 - Language packs: compressor/refiner rules as data files so the community
   can add languages without touching code.
+- Firefox port of the extension (MV3 WebExtensions parity is close;
+  blocked on nothing technical — recorded as backlog per Fase 3.H).
 - TypeScript declarations, property-based tests for the mask/unmask and
   never-remove-negation invariants.
 
