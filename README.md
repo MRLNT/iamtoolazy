@@ -122,6 +122,12 @@ r.injection.reason;     // why it acted — or why it refused to
 
 ## FAQ
 
+## Try it in 10 seconds (no install)
+
+**[Playground →](https://mrlnt.github.io/iamtoolazy/playground/)** — paste a
+prompt, watch the pipeline print its honest receipt. Runs entirely in your
+browser; nothing leaves the page.
+
 **Does my data go anywhere?** No. Everything runs locally; there is no
 server, no telemetry, no account. There is no BYOK or network feature in
 the extension — every feature is free and offline by construction (an

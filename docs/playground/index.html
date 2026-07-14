@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>iamtoolazy playground — paste a prompt, read the receipt</title>
+<meta name="description" content="Try the iamtoolazy compression engine in your browser. 100% local: no server, no keys, no telemetry.">
+<style>
+  :root {
+    --paper: #faf7f2; --ink: #26221c; --muted: #7a7264;
+    --line: #d9d2c4; --euca: #2e7d5b; --euca-soft: #e3efe8;
+    --amber: #a05f0c; --amber-soft: #f6ead6; --card: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #1d1b17; --ink: #ece7dc; --muted: #9b937f;
+      --line: #3a362c; --euca: #5cbf93; --euca-soft: #21332a;
+      --amber: #e0a23e; --amber-soft: #3a2f1c; --card: #26231d;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font: 16px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  header { max-width: 1060px; margin: 0 auto; padding: 28px 20px 6px; }
+  header h1 { font-size: 1.35rem; margin: 0; letter-spacing: -0.01em; }
+  header h1 .koala { font-size: 1.5rem; }
+  header p { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+  header a { color: var(--euca); }
+  main {
+    max-width: 1060px; margin: 18px auto 40px; padding: 0 20px;
+    display: grid; gap: 18px; grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 820px) { main { grid-template-columns: 1fr; } }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .panel h2 {
+    margin: 0 0 10px; font-size: 0.78rem; text-transform: uppercase;
+    letter-spacing: 0.09em; color: var(--muted); font-weight: 600;
+  }
+  textarea {
+    width: 100%; min-height: 210px; resize: vertical; border: 1px solid var(--line);
+    border-radius: 8px; padding: 12px; background: var(--paper); color: var(--ink);
+    font: 14px/1.5 ui-monospace, Menlo, Consolas, monospace;
+  }
+  textarea:focus, select:focus, button:focus, input:focus { outline: 2px solid var(--euca); outline-offset: 1px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 12px; align-items: center; font-size: 0.88rem; }
+  .controls label { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); }
+  select { border: 1px solid var(--line); border-radius: 6px; padding: 4px 6px; background: var(--card); color: var(--ink); }
+  .out { white-space: pre-wrap; word-wrap: break-word; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px; min-height: 96px; font-size: 14px; }
+  .rowtop { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  button.copy { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 6px; padding: 3px 10px; font-size: 0.8rem; cursor: pointer; }
+  button.copy:hover { border-color: var(--euca); color: var(--euca); }
+
+  /* signature: the receipt */
+  .receipt { border: 1px dashed var(--line); border-radius: 8px; padding: 14px 16px; background: var(--paper); font-size: 13.5px; }
+  .receipt .r { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+  .receipt .r span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+  .receipt hr { border: 0; border-top: 1px dashed var(--line); margin: 8px 0; }
+  .receipt .total span:last-child { font-weight: 700; }
+  .pos { color: var(--euca); } .neg { color: var(--amber); }
+  .reason { margin-top: 8px; padding: 8px 10px; border-radius: 6px; background: var(--euca-soft); color: var(--ink); font-size: 12.5px; }
+  .reason.skip { background: var(--amber-soft); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 1px 9px; font-size: 12px; color: var(--muted); }
+  .chip s { text-decoration-color: var(--amber); }
+  .footnote { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  footer { max-width: 1060px; margin: 0 auto 32px; padding: 0 20px; color: var(--muted); font-size: 13px; }
+  footer a { color: var(--euca); }
+  @media (prefers-reduced-motion: no-preference) {
+    .receipt { transition: border-color 0.2s ease; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1><span class="koala" aria-hidden="true">🐨</span> iamtoolazy playground</h1>
+  <p>Paste a prompt. The engine compresses, refines, and decides whether a
+     directive pays for itself — then prints the receipt, skip reasons and
+     all. Runs entirely in your browser: no server, no keys, nothing leaves
+     this page. <a href="https://github.com/MRLNT/iamtoolazy">Source & measured benchmarks</a>.</p>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>Your prompt</h2>
+    <textarea id="input" spellcheck="false"
+      placeholder="Hi! I was hoping you could maybe help me write a Python function that parses CSV files? Thanks so much in advance!"></textarea>
+    <div class="controls">
+      <label>Provider
+        <select id="provider">
+          <option value="generic">generic</option>
+          <option value="claude">claude (calibrated)</option>
+          <option value="openai">openai</option>
+        </select>
+      </label>
+      <label>Compression
+        <select id="level">
+          <option value="lite">lite</option>
+          <option value="full" selected>full</option>
+          <option value="ultra">ultra</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="yagni" checked> YAGNI (coding)</label>
+    </div>
+    <div class="chips" id="removed" aria-live="polite"></div>
+  </section>
+
+  <section class="panel">
+    <div class="rowtop">
+      <h2>What would be sent</h2>
+      <button class="copy" id="copy" type="button">Copy</button>
+    </div>
+    <div class="out mono" id="output">—</div>
+
+    <h2 style="margin-top:16px">The receipt</h2>
+    <div class="receipt mono" id="receipt" aria-live="polite">Type a prompt to print a receipt.</div>
+    <p class="footnote" id="estimator"></p>
+  </section>
+</main>
+
+<footer>
+  Every number above is a labeled estimate — the honest ledger nets directive
+  cost against predicted savings and <em>skips when it can't win</em>.
+  Measured input-side results live in
+  <a href="https://github.com/MRLNT/iamtoolazy/tree/main/benchmarks/results/run-001-offline">benchmarks/results/run-001-offline</a>;
+  the method draft in <a href="https://github.com/MRLNT/iamtoolazy/blob/main/docs/paper/lazy-method.md">docs/paper/lazy-method.md</a>.
+</footer>
+
+<script type="module">
+  import { processPrompt, initTokenizer, estimatorMode } from './core.bundle.js';
+
+  const $ = (id) => document.getElementById(id);
+  const input = $('input'), output = $('output'), receipt = $('receipt');
+  const removedEl = $('removed'), estimatorEl = $('estimator');
+
+  await initTokenizer(); // in-browser this falls back to the heuristic — labeled below
+  estimatorEl.textContent = `token estimator: ${estimatorMode()} — same engine and fallback the extension uses; all numbers are estimates.`;
+
+  const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+  const row = (label, value, cls = '') =>
+    `<div class="r"><span>${label}</span><span class="${cls}">${value}</span></div>`;
+
+  function render() {
+    const raw = input.value;
+    if (!raw.trim()) {
+      output.textContent = '—';
+      receipt.textContent = 'Type a prompt to print a receipt.';
+      removedEl.innerHTML = '';
+      return;
+    }
+    const r = processPrompt(raw, {
+      provider: $('provider').value,
+      compressLevel: $('level').value,
+      enableYagni: $('yagni').checked,
+    });
+
+    output.textContent = r.output;
+
+    removedEl.innerHTML = (r.compress?.removed ?? [])
+      .slice(0, 12)
+      .map((x) => `<span class="chip" title="${esc(x.type)}"><s>${esc(x.text)}</s></span>`)
+      .join('');
+
+    const t = r.tokens;
+    const sign = (n) => (n > 0 ? `+${n}` : `${n}`);
+    const lines = [
+      row('tokens in (before)', t.before),
+      row('tokens in (after)', t.after),
+      row('input Δ', sign(t.inputDelta), t.inputDelta > 0 ? 'neg' : 'pos'),
+      '<hr>',
+      row('predicted output savings', t.predictedOutputSavings ? `−${t.predictedOutputSavings}` : '0'),
+      `<div class="r total"><span>predicted net</span><span class="${t.predictedNet >= 0 ? 'pos' : 'neg'}">${sign(-0 + t.predictedNet)}</span></div>`,
+      '<hr>',
+      row('stages', r.stages.length ? r.stages.map((s) => s.stage).join(' → ') : 'none'),
+    ];
+    const inj = r.injection;
+    const reason = inj?.reason ? `<div class="reason ${inj.inject ? '' : 'skip'}">${inj.inject ? 'injected' : 'skipped'}: ${esc(inj.reason)}</div>` : '';
+    receipt.innerHTML = lines.join('') + reason +
+      `<div class="footnote">${esc(t.estimateNote)}</div>`;
+  }
+
+  let timer;
+  const schedule = () => { clearTimeout(timer); timer = setTimeout(render, 120); };
+  input.addEventListener('input', schedule);
+  for (const id of ['provider', 'level', 'yagni']) $(id).addEventListener('change', render);
+
+  $('copy').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(output.textContent);
+      $('copy').textContent = 'Copied';
+      setTimeout(() => ($('copy').textContent = 'Copy'), 1200);
+    } catch { $('copy').textContent = 'Select & copy'; }
+  });
+
+  render();
+</script>
+</body>
+</html>
