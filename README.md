@@ -123,18 +123,23 @@ r.injection.reason;     // why it acted — or why it refused to
 ## FAQ
 
 **Does my data go anywhere?** No. Everything runs locally; there is no
-server, no telemetry, no account. The optional BYOK refine feature
-(coming in 3.D) sends text only to the AI provider *you* configure with
-*your* key.
+server, no telemetry, no account. There is no BYOK or network feature in
+the extension — every feature is free and offline by construction (an
+early BYOK experiment was built, field-tested, and removed on purpose).
 
 **Will it change my meaning?** It refuses to touch code, URLs, paths,
 numbers, and negations — enforced by tests, and structurally impossible
 to remove in the compressor. When in doubt, it keeps your wording.
 
-**How much does it save?** Honestly: it depends, and today's numbers are
-labeled estimates. Typical sloppy prompts compress 30–70%. Reproducible
-benchmarks (run N times, reported as mean ± spread, never single runs)
-land in Fase 4.
+**How much does it save?** Measured, input side (run 1, offline,
+committed in `benchmarks/results/run-001-offline/`): the thread
+distiller cuts re-sent history by ~30% on 6–8-turn threads, breaking
+even after ~3–4 turns (modeled ceiling — longer real threads save
+more). On short single prompts the injected directives *cost* about +50
+input tokens on average — a deliberate bet that they save more on the
+output side, which is **not yet measured** (run 1 spent zero on APIs;
+the honest ledger nets this per prompt and skips when it can't win).
+Raw JSONL, spreads, and limitations ship with every number.
 
 **Why "lazy"?** Because the cheapest token is the one never sent — and
 the smartest tool is the one that knows when doing nothing is optimal.
