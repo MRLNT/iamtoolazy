@@ -248,3 +248,10 @@ seconds without installing anything.
   into a standalone harness: run any agentic task N times, diff outcomes,
   score stability. Re-validate the gap before starting.
 - **Firefox port** of the extension.
+- **Long-thread nudge** (extension): when delta-context session memory
+  shows a thread has grown past a threshold, offer 🧵 Distill once,
+  non-blocking, in the style of the one-time PDF hint. Free,
+  zero-network, turns the biggest measured saver from a feature users
+  must remember into one that arrives when it pays most. Decided
+  2026-07-14; parked until after Fase 4.A so benchmarks keep momentum —
+  the 4.C history-modes numbers will also say how hard to push it.
