@@ -2,7 +2,7 @@
 
 **Draft v0.1 (pre-submission) — evaluation section pending Fase 4 results. Not yet submitted anywhere.**
 
-Author: Marcel (iamtoolazy maintainer) · Reference implementation: `@iamtoolazy/core` v0.2
+Author: Marcel (iamtoolazy maintainer) · Reference implementation: `@iamtoolazy/core` v0.5.x
 
 ## Abstract
 
@@ -133,7 +133,90 @@ directive validation against [3,4]. **Metrics:** input/output tokens per
 task, task success, turn count, net ledger. **Protocol:** n≥4 runs,
 medians, raw per-task tables published; limitations section mandatory.
 
+### 5.1 Deviations from the pre-registered design
+
+The shipped harness (Fase 4.A, `benchmarks/`) deviates from the design
+above in five documented ways. All predate the analysis of run 1 except
+(5), which run 1 itself surfaced.
+
+1. **Protocol upgraded** (2026-07-09): N=5 repeats with mean ± min/max
+   spread replaces n≥4 medians; probes whose verdict flips across
+   repeats are flagged unstable and counted neither way.
+2. **Third-party baselines replaced by in-repo reimplementations.** B2
+   (caveman) and B3 (ponytail) are benchmarked as `static-terse` and
+   `yagni-only` — the same directive styles, pinned in this repo —
+   because external repos change under our feet and their savings claims
+   were re-benchmarked downward by independent tests during Fase 4.
+3. **Ablations redefined.** E1 = no calibration, E2 = no net-positive
+   guard, E3 = fixed budgets. The pre-registered set isolated components;
+   the shipped set stress-tests LAZY's safety rails, which is the
+   sharper question.
+4. **GSM8K subset dropped** — outside the zero-cost scope of run 1.
+5. **Workloads were authored WITHOUT deliberate context restatement**,
+   contrary to the design above. Run 1's DCC result (F4) exposed this;
+   restatement-heavy history records will be *appended* (workloads are
+   append-only) before any run that scores DCC.
+
+### 5.2 Run 1 — measured input-side results (offline, zero API cost)
+
+**Setup.** 86 frozen workload records (80 single-turn across
+coding/reasoning/qa/writing × EN+ID; 6 multi-turn histories), run
+committed at `a801ed6` with raw JSONL and the rendered report in
+`benchmarks/results/run-001-offline/`. Token counts use the offline
+o200k tokenizer (deterministic; Claude counts would apply a calibration
+factor). Transformations are deterministic, so n=1; no API calls were
+made and no output-side metric exists in this run.
+
+| condition | mean input Δ (tokens) | vs baseline | injected |
+|---|---|---|---|
+| baseline | 0 | +0.0% | 0% |
+| be-brief (one-liner) | +4.2 | +4.4% | 100% |
+| static-terse | +35.7 | +37.5% | 100% |
+| yagni-only | +51.7 | +54.4% | 100% |
+| **iamtoolazy (full)** | **+50.1** | **+52.8%** | **93%** |
+| E2 (guard off) | +54.6 | +57.4% | 100% |
+| E3 (fixed budgets) | +54.6 | +57.4% | 100% |
+
+**F1 — directive overhead dominates single-turn input.** On prompts
+averaging 95 tokens, the full pipeline ADDS +50.1 input tokens on
+average; in 0 of 80 records did compression savings exceed directive
+cost. The one-line "be brief" baseline costs 12× less input. Under
+LAZY's own ledger, single-turn value therefore rests entirely on
+output-side savings — which run 1, by scope, does not measure. We state
+this plainly rather than let the input column imply the opposite.
+
+**F2 — the net-positive guard functions.** It skipped 6/80 prompts
+(the terse and short-expected ones) and lowered mean overhead relative
+to guard-off E2. The margin is small on this workload because most
+prompts classify as directive-worthy; the guard's value concentrates
+exactly where tools like static-terse go net-negative.
+
+**F3 — the thread distiller is the strongest measured saver.** On 6–8
+turn histories (631-token mean), distilling cuts re-sent input by 192
+tokens per turn (−30.5%) against a one-time distill cost of ~663
+tokens: break-even after ≈3.4 turns. The brief is modeled at its
+400-token cap — a ceiling, so real break-even may come earlier — and
+per-turn savings grow with thread length, making these short workloads
+a floor scenario.
+
+**F4 — DCC dropped zero sentences in all six histories.** The authored
+final prompts contain no restatement, so run 1 neither validates nor
+falsifies delta-context compression. This is a workload-design finding
+(deviation 5), reported as-is.
+
+**F5 — the input-overhead column is the point.** Community
+re-benchmarks of static tools found their headline savings eroded by
+unreported input overhead; here that overhead is a first-class measured
+column (+37.5% to +57.4% across always-inject conditions) from day one.
+
 ## 6. Limitations & Ethics
+
+**Output-side effects are unmeasured by decision.** Run 1 was executed
+under a zero-API-spend scope (decision record in `docs/master-plan.md`);
+directive payback, calibration ablation (E1), and probe stability
+require a live run and remain open. Distill numbers use a modeled brief
+ceiling, not a measured brief. Workloads are cleaner than wild prompts
+(author-written, mostly typo-free, three informal-register records).
 
 Token counts are estimates for some providers. DCC's word-overlap
 redundancy can miss paraphrase (future: local embeddings). SCI's savings
