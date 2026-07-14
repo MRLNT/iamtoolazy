@@ -1,0 +1,16 @@
+{
+  "run_id": "offline-2026-07-14T17-25-31-925Z",
+  "mode": "offline",
+  "provider": "mock",
+  "model": null,
+  "n": 1,
+  "distill_cap": 400,
+  "estimator": "tokenizer",
+  "notes": [
+    "offline mode: transformations are deterministic — n forced to 1",
+    "offline mode: E1 (no calibration) is identical to iamtoolazy — calibration only learns from live outputs",
+    "offline mode: hist-distill briefs are MODELED at the 400-token cap (ceiling, not a measurement)"
+  ],
+  "note": "all *_estimate fields use the offline tokenizer; *_measured fields come from provider usage",
+  "created_at": "2026-07-14T17:25:32.012Z"
+}
