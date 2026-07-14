@@ -159,6 +159,14 @@ seconds without installing anything.
 - **Commit:** `docs(bench): quality protocol and scoring sheet`
 
 ### 4.C Run & publish  [live — needs API keys, cost estimate given first]
+
+> **Decision record (2026-07-14):** Run 1 executed **offline-only** —
+> zero API spend by maintainer decision (project cost scope: the one-time
+> Chrome Web Store fee is the only accepted expense). Consequences:
+> README and paper claims are limited to measured input-side numbers;
+> output-side payback, the E1 calibration ablation, and probe stability
+> are deferred to an optional future run 2, which stays behind the
+> mandatory dry-run cost gate.
 - Maintainer runs the matrix (a dry-run prints projected API cost before
   anything is spent), commits raw results + `RESULTS.md`; README numbers
   updated to measured values.
