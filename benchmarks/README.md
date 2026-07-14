@@ -24,8 +24,10 @@ Reproducible or it didn't happen.
 workloads/   frozen prompt sets — see workloads/SCHEMA.md   (4.A.1 ✅)
 validate.mjs workload schema validator (runs in npm test)   (4.A.1 ✅)
 test/        node:test suites for the benchmark tooling     (4.A.1 ✅)
-run.mjs      condition runner with LAZY ablations           (4.A.2 — next)
-report.mjs   RESULTS.md generator                           (4.A.3 — planned)
+run.mjs      condition runner with LAZY ablations           (4.A.2 ✅)
+providers.mjs mock (sandbox) + anthropic (BYOK) providers    (4.A.2 ✅)
+results/     raw run output (committed at 4.C, not before)
+report.mjs   RESULTS.md generator                           (4.A.3 — next)
 ```
 
 ## Conditions (defined in docs/master-plan.md, Fase 4.A)
@@ -34,6 +36,26 @@ report.mjs   RESULTS.md generator                           (4.A.3 — planned)
 plus LAZY ablations `E1` (no calibration), `E2` (no net-positive guard),
 `E3` (fixed budgets), and a history-modes matrix (full history vs
 distiller vs delta-context).
+
+## Running the benchmark
+
+```
+node benchmarks/run.mjs                                   # offline: input metrics, zero cost
+node benchmarks/run.mjs --mode dry-run --n 5 --price-in <per-MTok>   # project cost, spend nothing
+node benchmarks/run.mjs --mode live --provider anthropic --model <id> --n 5
+```
+
+Useful flags: `--conditions baseline,iamtoolazy` · `--filter coding-en`
+(substring on record ids) · `--out <dir>` · `--distill-cap 400`.
+
+Live mode is BYOK via the `ANTHROPIC_API_KEY` env var; the key never
+appears in results or logs. Always run `--mode dry-run` first — no live
+matrix should ever be started without seeing its projected cost.
+
+Offline-mode honesty notes (printed by the runner itself): E1 equals
+`iamtoolazy` offline because calibration only learns from live outputs,
+and `hist-distill` briefs are modeled at the distill cap (a ceiling),
+never presented as measurements.
 
 ## Validating workloads
 
