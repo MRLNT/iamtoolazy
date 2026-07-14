@@ -8,10 +8,10 @@
     "packages/*"
   ],
   "scripts": {
-    "test": "node --test packages/core/test/*.test.js",
+    "test": "node --test packages/core/test/*.test.js benchmarks/test/*.test.mjs",
     "demo": "node scripts/demo.js",
     "sync:cli": "node scripts/sync-cli-core.mjs",
-    "lint": "eslint packages/*/src packages/*/hooks scripts",
+    "lint": "eslint packages/*/src packages/*/hooks scripts benchmarks",
     "build:ext": "esbuild packages/extension/src/content.js packages/extension/src/background.js --bundle --format=iife --external:gpt-tokenizer/encoding/o200k_base --outdir=packages/extension/dist && esbuild packages/extension/src/pdf-extract.js --bundle --format=esm --minify --outfile=packages/extension/dist/pdf-extract.js"
   },
   "engines": {
