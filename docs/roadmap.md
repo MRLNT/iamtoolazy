@@ -53,19 +53,19 @@ Plus: **PRIVACY.md + THREAT-MODEL.md** — least-privilege permissions,
 local-only storage, explicit answers to "is this extension reading my
 chats?" — written to a security-professional standard.
 
-## Fase 4 — Honest benchmarks + launch
+## Fase 4 — Honest benchmarks + launch ✅ `v0.6.0`
 
-- Reproducible harness vs four baselines: no tool, a one-line "be brief"
-  instruction, caveman, ponytail. n≥4 runs, medians, raw per-task tables,
-  limitations section. No benchmark, no claim.
-- **LAZY validation**: ablations E1–E3 from the method draft (DCC only,
-  SCI only, frozen savings factor) vs baselines incl. the one-line
-  "be brief" — then finalize the paper for submission.
-- Mini paper-reproduction eval (BYOK, GSM8K subset) validating the CoD and
-  TALE directives against their published numbers.
-- Interactive playground on GitHub Pages — core runs fully in-browser.
-- Local-only stats export (opt-in shareable JSON; still zero telemetry).
-- Technical launch write-up.
+Shipped: frozen benchmark workloads (86 records, EN+ID, multi-turn
+histories with QA probes), runner with 8 conditions + LAZY ablations
+(E1 no-calibration / E2 no-guard / E3 fixed-budget) + history modes,
+offline/dry-run/live with mandatory cost projection, report generator
+(mean ± min/max, instability flags, the input-overhead column), blind
+pairwise quality protocol, **run 1 committed** (offline, input-side,
+$0 — decision record in master-plan), paper §5.1–5.2 with deviations
+and findings incl. negative results, in-browser playground on Pages,
+launch drafts. Deferred by decision: live output-side run (run 2, behind
+the dry-run cost gate), GSM8K reproduction, restatement-heavy history
+records (append-only additions before any DCC-scoring run).
 
 ## Fase 5 — Smart Compress + scale
 

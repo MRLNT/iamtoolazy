@@ -2,6 +2,37 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com) · Versioning: semver.
 
+## [0.6.0] — 2026-07-15
+
+**Measured: benchmarks, paper, playground.** Zero-network and free-for-
+users rules unchanged; this release also spent zero on APIs (decision
+record in docs/master-plan.md).
+
+### Added
+- Benchmark harness (`benchmarks/`): 86 frozen JSONL workload records
+  (coding/reasoning/qa/writing × EN+ID + multi-turn histories with QA
+  probes), schema validator, runner with 8 conditions + LAZY ablations
+  (E1/E2/E3) + history modes, offline/dry-run/live modes with mandatory
+  cost projection, report generator (mean ± min/max, instability flags,
+  input-overhead column), blind pairwise quality protocol (4.B)
+- **Run 1 results committed** (`benchmarks/results/run-001-offline/`):
+  input-side measured — distiller −30.5% per turn (break-even ≈3.4
+  turns, modeled ceiling); full pipeline +52.8% input on short single
+  prompts (output-side payback deliberately unmeasured at $0 scope)
+- Paper: §5.1 deviations from the pre-registered design, §5.2 run 1
+  results with findings F1–F5, expanded limitations
+- **Playground** on GitHub Pages (`docs/playground/`): paste a prompt,
+  read the honest receipt — 100% in-browser, no server, no keys
+- Launch drafts in `docs/launch/` (Show HN, r/ClaudeAI, r/LocalLLaMA, X)
+
+### Changed
+- README savings numbers are now measured, not predicted; stale BYOK
+  FAQ line removed (BYOK was deleted in 0.5.0)
+- Benchmarks methodology finalized: N-repeat mean ± spread, offline
+  tokenizer for input metrics, CI renders committed results only
+- Extension version bump to 0.6.0 — **version bump only, no functional
+  extension changes since 0.5.0** (keeps the release zip name truthful)
+
 ## [0.5.0] — 2026-07-12
 
 First public beta of the **browser extension** (MV3) for claude.ai,
