@@ -35,6 +35,30 @@ test('code fences, inline code, URLs, filenames survive byte-for-byte', () => {
   assert.ok(r.text.includes('https://a.b/c-just-d'));
 });
 
+test('nested protection: a URL inside a quoted call survives (regression: fetch(\'0\') bug)', () => {
+  // The single-quote pattern wraps the already-masked URL, nesting two
+  // placeholders; a single-pass unmask left the inner URL as \u00000\u0000.
+  const input = "please help debug this: fetch('https://api.example.com/v2/users/1841') returns 404 but the id 1841 exists";
+  const r = compress(input, { level: 'ultra' });
+  assert.ok(
+    r.text.includes("fetch('https://api.example.com/v2/users/1841')"),
+    `URL must survive intact, got: ${r.text}`
+  );
+  assert.ok(!/\u0000/.test(r.text), 'no mask placeholder may leak into output');
+});
+
+test('quoted string wrapping a filename also survives nesting', () => {
+  const r = compress('open "config in settings.json" and rerun', { level: 'ultra' });
+  assert.ok(r.text.includes('"config in settings.json"'), r.text);
+  assert.ok(!/\u0000/.test(r.text));
+});
+
+test('EN closer with stacked modifiers is stripped (regression: "thanks so much in advance")', () => {
+  const r = compress('write a haiku about rain. Thanks so much in advance!', { level: 'full' });
+  assert.ok(!/thanks so much in advance/i.test(r.text), `closer must be removed, got: ${r.text}`);
+  assert.ok(/haiku about rain/i.test(r.text), 'task text must survive');
+});
+
 test('negations are never removed', () => {
   const r = compress("Please refactor this, but don't change the public API and jangan hapus tes.", { level: 'ultra' });
   assert.ok(/don't change/.test(r.text));

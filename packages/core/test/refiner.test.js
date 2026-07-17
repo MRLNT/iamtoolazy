@@ -46,6 +46,22 @@ test('classify: qa short question gets low expected tokens', () => {
   assert.ok(c.expectedTokens <= 250);
 });
 
+test('classify: bare greeting gets a low expected floor (regression: "halo" got a directive)', () => {
+  // A greeting classifies as 'other'; before the fix it kept the 350
+  // default and passed the net-positive guard, bloating "halo" to 37 tok.
+  for (const g of ['halo', 'hi', 'hey there', 'thanks!']) {
+    const c = classify(g);
+    assert.ok(c.expectedTokens <= 120, `${g}: expected ${c.expectedTokens} must be capped low`);
+  }
+});
+
+test('classify: a real short task (>3 words) is NOT floored (guard stays narrow)', () => {
+  // 6 words, lands in 'other' — the greeting floor (<=3 words) must not
+  // catch it, so it keeps a normal estimate and can still get a directive.
+  const c = classify('reverse a linked list in python');
+  assert.ok(c.expectedTokens > 120, `real short task must keep its estimate, got ${c.expectedTokens}`);
+});
+
 test('classify: brief/detail modifiers scale expectations', () => {
   const brief = classify('Briefly explain how DNS works');
   const detail = classify('Explain in depth and step-by-step how DNS works');

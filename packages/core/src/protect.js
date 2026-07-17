@@ -40,6 +40,20 @@ export function mask(text) {
  * @returns {string}
  */
 export function unmask(masked, spans) {
-  // eslint-disable-next-line no-control-regex -- \u0000 placeholders are intentional
-  return masked.replace(/\u0000(\d+)\u0000/g, (_, i) => spans[Number(i)]);
+  // Spans can nest: a single-quoted-string pattern may wrap an
+  // already-masked URL, so a restored span can itself contain a
+  // placeholder. A single replace pass would leave the inner one behind
+  // (e.g. fetch('<url>') coming back as fetch('\u00000\u0000')). Restore
+  // repeatedly until stable; bounded by span count as a safety cap.
+  let out = String(masked);
+  for (let pass = 0; pass <= spans.length; pass++) {
+    // eslint-disable-next-line no-control-regex -- \u0000 placeholders are intentional
+    const next = out.replace(/\u0000(\d+)\u0000/g, (m, i) => {
+      const span = spans[Number(i)];
+      return span === undefined ? m : span;
+    });
+    if (next === out) break;
+    out = next;
+  }
+  return out;
 }

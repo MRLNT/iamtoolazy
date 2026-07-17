@@ -134,6 +134,12 @@ export function classify(text) {
   if (BRIEF_HINTS.test(t)) expected = Math.round(expected * 0.4);
   if (DETAIL_HINTS.test(t)) expected = Math.round(expected * 1.8);
   if (t.length < 40 && type === 'qa') expected = Math.min(expected, 120);
+  // Greetings and bare one-liners ("halo", "hey there") land in 'other'
+  // with no task signal; a directive can't pay for itself on them. Gate on
+  // word count, not length, so a real short task ("reverse a linked list in
+  // python") that also lands in 'other' keeps its normal estimate.
+  const wordCount = t.trim().split(/\s+/).filter(Boolean).length;
+  if (type === 'other' && wordCount <= 3) expected = Math.min(expected, 120);
 
   return { type, expectedTokens: expected, lang };
 }

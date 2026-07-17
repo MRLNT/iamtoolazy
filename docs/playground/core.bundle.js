@@ -112,7 +112,16 @@ function mask(text) {
   return { masked, spans };
 }
 function unmask(masked, spans) {
-  return masked.replace(/\u0000(\d+)\u0000/g, (_, i) => spans[Number(i)]);
+  let out = String(masked);
+  for (let pass = 0; pass <= spans.length; pass++) {
+    const next = out.replace(/\u0000(\d+)\u0000/g, (m, i) => {
+      const span = spans[Number(i)];
+      return span === void 0 ? m : span;
+    });
+    if (next === out) break;
+    out = next;
+  }
+  return out;
 }
 
 // packages/core/src/compressor.js
@@ -153,7 +162,7 @@ var FILLERS = {
 };
 var CLOSERS = {
   en: [
-    /\s*(?:thanks(?: in advance| so much| a lot)?|thank you(?: so much)?|cheers|ty)\W*$/i,
+    /\s*(?:thanks|thank you|cheers|ty)(?: so much| a lot| in advance| very much)*\W*$/i,
     /\s*i(?: would|'d)? ?appreciate (?:it|any help|your help)[^.!\n]*[.!]?\s*$/i,
     /\s*let me know if you (?:have any questions|need anything)[^.!\n]*[.!]?\s*$/i
   ],
@@ -292,6 +301,8 @@ function classify(text) {
   if (BRIEF_HINTS.test(t)) expected = Math.round(expected * 0.4);
   if (DETAIL_HINTS.test(t)) expected = Math.round(expected * 1.8);
   if (t.length < 40 && type === "qa") expected = Math.min(expected, 120);
+  const wordCount = t.trim().split(/\s+/).filter(Boolean).length;
+  if (type === "other" && wordCount <= 3) expected = Math.min(expected, 120);
   return { type, expectedTokens: expected, lang };
 }
 function buildStructured(parts, lang) {

@@ -55,7 +55,7 @@ const FILLERS = {
 
 const CLOSERS = {
   en: [
-    /\s*(?:thanks(?: in advance| so much| a lot)?|thank you(?: so much)?|cheers|ty)\W*$/i,
+    /\s*(?:thanks|thank you|cheers|ty)(?: so much| a lot| in advance| very much)*\W*$/i,
     /\s*i(?: would|'d)? ?appreciate (?:it|any help|your help)[^.!\n]*[.!]?\s*$/i,
     /\s*let me know if you (?:have any questions|need anything)[^.!\n]*[.!]?\s*$/i,
   ],
