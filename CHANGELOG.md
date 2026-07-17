@@ -2,6 +2,33 @@
 
 Format: [Keep a Changelog](https://keepachangelog.com) · Versioning: semver.
 
+## [0.6.1] — 2026-07-18
+
+**Bug-fix release.** Three correctness bugs in the compression core, all
+surfaced by playground field testing. They affected the extension too, so
+anyone on 0.6.0 should update.
+
+### Fixed
+- **Protected spans could leak a placeholder.** A URL (or filename) inside
+  a quoted string nested two mask placeholders; the single-pass unmask
+  restored only the outer one, so e.g. `fetch('https://…/1841')` came back
+  as `fetch('\u00000\u0000')`. Unmask now restores to a fixpoint. This
+  broke the core "URLs/code survive byte-for-byte" guarantee — the most
+  important fix here. (regression test added)
+- **Bare greetings got a directive.** "halo"/"hi" classified as `other`
+  with the default 350-token estimate, passing the net-positive guard and
+  bloating a 1-token greeting to ~37 tokens while claiming savings. Short
+  no-task prompts (≤3 words, `other`) are now floored so the guard skips
+  them — the honest ledger's whole point. (regression test added)
+- **English closers with stacked modifiers weren't stripped.** "Thanks so
+  much in advance" combined two modifiers the pattern allowed only singly,
+  so it survived compression and the refiner then promoted it to the front
+  of the prompt. Pattern now allows stacked modifiers, matching the
+  Indonesian closer behavior. (regression test added)
+
+### Changed
+- Version bump to 0.6.1 (extension + core); rebuilt playground bundle.
+
 ## [0.6.0] — 2026-07-15
 
 **Measured: benchmarks, paper, playground.** Zero-network and free-for-

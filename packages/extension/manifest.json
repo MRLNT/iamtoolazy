@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "iamtoolazy",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Too lazy to waste tokens. Prompt compression with a preview diff, media savings, and an honest ledger \u2014 all local, zero telemetry.",
   "icons": {
     "16": "icons/icon16.png",
