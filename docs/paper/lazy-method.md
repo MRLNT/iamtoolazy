@@ -209,7 +209,62 @@ re-benchmarks of static tools found their headline savings eroded by
 unreported input overhead; here that overhead is a first-class measured
 column (+37.5% to +57.4% across always-inject conditions) from day one.
 
+### 5.3 Run 2 — closing the DCC gap (offline, zero API cost)
+
+F4 of run 1 reported that delta-context compression dropped nothing,
+because the authored final prompts contained no restatement. Six
+restatement-heavy history records were **appended** (workloads are
+append-only; the run-1 records are untouched and its numbers stand) with
+deliberately graded restatement — light (one restating sentence), medium
+(two), heavy (three) — in EN and ID. Run 2 is committed at
+`benchmarks/results/run-002-offline/`.
+
+| record group | records | sentences dropped | records with a drop | input vs full history |
+|---|---|---|---|---|
+| run-1 records (no restatement) | 6 | 0 | 0 | 0.0% |
+| run-2 records (restatement) | 6 | 8 | 5 | −5.6% |
+| run-2 records, active only | 5 | 8 | 5 | −7.0% (−3.9…−9.9%) |
+
+**F6 — DCC works, and its effect size is small and conditional.** On
+prompts that restate established context it removes 3.9–9.9% of the
+re-sent input; on prompts that do not, it correctly does nothing. Both
+halves matter: a compressor that fires on non-redundant text would be
+dangerous, and one that never fires would be dead weight. The honest
+summary is not a headline percentage but a conditional: *DCC pays only
+for users who restate, and those users exist.*
+
+**F7 — the discourse marker that signals restatement defeats the
+detector.** `history-id-04` restates two established facts but scored
+0.846 coverage against a 0.85 threshold and survived. The cause is
+instructive: the phrase "Seperti saya sebutkan tadi" ("as I mentioned
+earlier") introduces content words that are *absent* from the history,
+lowering lexical coverage — the very marker announcing redundancy is
+what pushes the sentence under the bar. Treating restatement markers as
+stop-words is an obvious fix and is recorded as future work rather than
+applied here: tuning a threshold against a benchmark authored in the
+same week would be fitting the tool to its own exam.
+
+**F8 — the distiller has a lower bound, previously invisible.** Run 1's
+histories were 532–744 tokens, all above the 400-token brief cap, so
+distilling always won. The shorter run-2 histories (284–391 tokens) fall
+*below* the cap, and there distilling **costs** 17.7–55.3% more input
+than simply re-sending the thread. The break-even is structural, not
+tunable: replacing a history with a brief only pays once the history
+exceeds the brief. The extension should therefore not offer 🧵 Distill
+on short threads at all — a guard the benchmark demanded before any user
+complained.
+
 ## 6. Limitations & Ethics
+
+**Effect sizes are small and workload-shaped.** DCC's 3.9–9.9% applies
+only to restating prompts, on a 6-record corpus authored by the
+maintainer; treat it as existence proof, not as a population estimate.
+
+**Future work made concrete by run 2.** (a) Treat restatement discourse
+markers as stop-words in DCC coverage (F7) and measure the change on a
+corpus authored *before* the fix. (b) Gate the thread distiller on
+history length so it is never offered below break-even (F8). (c) Live
+run for output-side payback, E1, and probe stability.
 
 **Output-side effects are unmeasured by decision.** Run 1 was executed
 under a zero-API-spend scope (decision record in `docs/master-plan.md`);

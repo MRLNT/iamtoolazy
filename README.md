@@ -68,7 +68,7 @@ Works on **claude.ai**, **chatgpt.com**, and **gemini.google.com**.
 Web Store listing is in review; until then, two ways in:
 
 **Easy way (no build tools):** grab
-[`iamtoolazy-extension-v0.5.0.zip` from the latest release](https://github.com/MRLNT/iamtoolazy/releases/latest),
+[`iamtoolazy-extension-v0.6.1.zip` from the latest release](https://github.com/MRLNT/iamtoolazy/releases/latest),
 unzip it, then: `chrome://extensions` → enable **Developer mode**
 (top-right) → **Load unpacked** → select the unzipped folder. A welcome
 tab opens with a 30-second hands-on tour.
@@ -89,6 +89,28 @@ Options (off by default); the popup's 🧵 **Distill** shrinks long
 threads. Privacy: [PRIVACY.md](PRIVACY.md) ·
 [THREAT-MODEL.md](THREAT-MODEL.md) — zero network, zero telemetry.
 Details: [packages/extension](packages/extension/README.md).
+
+#### Platform support
+
+| Surface | Status |
+|---|---|
+| claude.ai | ✅ supported |
+| chatgpt.com | ✅ supported |
+| gemini.google.com | ✅ supported |
+| Claude Code (plugin) | ✅ supported |
+| Any tool importing `@iamtoolazy/core` | ✅ supported |
+| Firefox (same extension, MV3 port) | 🔜 planned |
+| More chat surfaces (e.g. Copilot, Mistral, DeepSeek, Perplexity, Grok, Poe, OpenWebUI) | 🔜 wanted — see below |
+
+**On adding surfaces.** The compression engine is provider-agnostic
+already; a new surface needs only a selector adapter (find the composer,
+read it, write it back) plus that provider's token-cost quirks, if any.
+That is deliberately a small, well-scoped contribution — the honest catch
+is that each one needs *field testing* on a real account before it ships,
+and shipping an adapter that silently mangles prompts would be worse than
+not shipping it. So the list above is a wanted-list, not a promise with
+dates. If a surface matters to you, open an issue saying which one and
+whether you can help test it; that is the signal that moves it up.
 
 ### Door 3 — The library
 

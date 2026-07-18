@@ -256,6 +256,16 @@ seconds without installing anything.
   into a standalone harness: run any agentic task N times, diff outcomes,
   score stability. Re-validate the gap before starting.
 - **Firefox port** of the extension.
+- **Distill break-even guard** (extension) — run 2 (F8) measured that
+  distilling a thread SHORTER than the brief cap costs 17.7–55.3% MORE
+  input than re-sending it. 🧵 Distill must therefore be hidden/disabled
+  below break-even. Highest-value backlog item: it prevents the tool from
+  actively harming a user, and the threshold is already measured.
+- **DCC discourse-marker stop-words** — run 2 (F7): "as I mentioned" /
+  "seperti saya sebutkan tadi" lower lexical coverage and defeat the very
+  detector they should trigger (0.846 vs 0.85 tau). Fix = treat
+  restatement markers as stop-words. Must be measured on a corpus
+  authored BEFORE the fix, otherwise it is benchmark overfitting.
 - **Long-thread nudge** (extension): when delta-context session memory
   shows a thread has grown past a threshold, offer 🧵 Distill once,
   non-blocking, in the style of the one-time PDF hint. Free,
