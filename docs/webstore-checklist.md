@@ -7,11 +7,13 @@ that can be drafted in advance is drafted below — copy-paste and go.
 - [ ] Google account for the developer dashboard
 - [ ] One-time **$5** developer registration fee
       (https://chrome.google.com/webstore/devconsole)
-- [ ] A green `v0.5.0` release with the CI-built zip attached
+- [ ] A green `v0.6.1` release with the CI-built zip attached
 
 ## 1. Package
-- [ ] Upload the CI zip from the release (built from the tagged commit —
-      never a local build; provenance matters)
+- [ ] Upload `iamtoolazy-extension-v0.6.1.zip` from the GitHub release
+      (CI-built from the tagged commit — never a local build; provenance
+      matters). v0.6.1 ships the three field-test correctness fixes, so it
+      is the only version that should be submitted.
 
 ## 2. Listing copy (drafted — edit freely)
 
@@ -68,5 +70,5 @@ honest numbers. Zero network, zero telemetry. 🐨`
 ## 7. After approval
 - [ ] Update README Door 2: Web Store link becomes the easy way;
       release-zip becomes the fallback
-- [ ] CHANGELOG note + tag `v0.5.1` if listing required changes
+- [ ] CHANGELOG note + patch tag (e.g. `v0.6.2`) if listing required changes
 - [ ] Firefox port stays in `docs/roadmap.md` backlog until requested
