@@ -6,9 +6,11 @@ import { join } from 'node:path';
 import {
   runBenchmark,
   probeVerdict,
+  loadWorkloads,
   SINGLE_CONDITIONS,
   HISTORY_CONDITIONS,
 } from '../run.mjs';
+import { WORKLOADS_DIR } from '../validate.mjs';
 
 const quiet = () => {};
 
@@ -19,8 +21,12 @@ test('offline run covers every condition x record, deterministic, baseline delta
   assert.equal(r.liveCalls, 0, 'offline must make zero live calls');
   const singles = r.results.filter((x) => x.class !== 'history');
   const hist = r.results.filter((x) => x.class === 'history');
-  assert.equal(singles.length, 80 * SINGLE_CONDITIONS.length);
-  assert.equal(hist.length, 6 * HISTORY_CONDITIONS.length);
+  // Counts are derived, never hardcoded: workloads are append-only, so a
+  // magic number here would break every time the corpus grows.
+  const singleIds = new Set(singles.map((x) => x.id)).size;
+  const histIds = new Set(hist.map((x) => x.id)).size;
+  assert.equal(singles.length, singleIds * SINGLE_CONDITIONS.length);
+  assert.equal(hist.length, histIds * HISTORY_CONDITIONS.length);
 
   for (const row of r.results.filter((x) => x.condition === 'baseline')) {
     assert.equal(row.input_delta_tokens, 0, `baseline delta must be 0 (${row.id})`);
@@ -54,33 +60,58 @@ test('ablation E2 (guard off) injects where iamtoolazy honestly skips', async ()
   }
 });
 
-test('hist-delta and hist-distill reduce input tokens vs full history (distill modeled offline)', async () => {
+test('history modes: delta never loses, distill wins only when history exceeds the brief cap', async () => {
   const out = mkdtempSync(join(tmpdir(), 'bench-hist-'));
+  const distillCap = 400;
   const r = await runBenchmark({
-    mode: 'offline', outDir: out,
+    mode: 'offline', outDir: out, distillCap,
     conditions: [...HISTORY_CONDITIONS], log: quiet,
   });
   for (const row of r.results.filter((x) => x.condition === 'hist-full')) {
     assert.equal(row.input_delta_tokens, 0);
   }
+
+  // Distill replaces the whole history with a brief; when the thread is
+  // SHORTER than the brief cap, that trade is a loss. Asserting an
+  // unconditional win would be asserting a marketing claim, so the test
+  // encodes the real relationship instead.
   for (const row of r.results.filter((x) => x.condition === 'hist-distill')) {
     assert.equal(row.modeled, true, 'offline distill must be flagged modeled');
-    assert.ok(row.input_delta_tokens < 0, `distill must beat full history (${row.id})`);
     assert.ok(row.one_time_distill_tokens_estimate > 0, 'one-time cost must be reported, not hidden');
+    const beatsFull = row.input_delta_tokens < 0;
+    const historyExceedsCap = row.tokens_in_full_history_estimate > distillCap;
+    assert.equal(
+      beatsFull, historyExceedsCap,
+      `${row.id}: distill should win iff history (${row.tokens_in_full_history_estimate}) > cap (${distillCap})`
+    );
   }
+
   for (const row of r.results.filter((x) => x.condition === 'hist-delta')) {
     assert.ok(row.input_delta_tokens <= 0, `delta must never exceed full history (${row.id})`);
   }
+
+  // The corpus must contain restatement-heavy records, or DCC is untested.
+  const dccActive = r.results.filter((x) => x.condition === 'hist-delta' && x.delta_dropped > 0);
+  assert.ok(
+    dccActive.length >= 3,
+    `expected >=3 records where DCC drops a sentence, got ${dccActive.length}`
+  );
 });
 
 test('dry-run projects calls and cost but writes and spends nothing', async () => {
-  const r = await runBenchmark({
-    mode: 'dry-run', n: 5, priceInPerMTok: 1.0, log: quiet,
-  });
+  const n = 5;
+  const r = await runBenchmark({ mode: 'dry-run', n, priceInPerMTok: 1.0, log: quiet });
   assert.equal(r.liveCalls, 0);
   assert.equal(r.writtenTo, null, 'dry-run must not write results');
-  // 80 singles x 8 conds x 5 + history: 6 recs x 3 conds x 5 x (1 + 3 probes) + 6 distill calls
-  const expected = 80 * 8 * 5 + 6 * 3 * 5 * 4 + 6;
+
+  // Derived from the corpus, not hardcoded (workloads are append-only).
+  const { singles, histories } = loadWorkloads(WORKLOADS_DIR);
+  const probeCalls = histories.reduce((a, h) => a + h.probes.length, 0);
+  const expected =
+    singles.length * SINGLE_CONDITIONS.length * n +           // single-turn
+    histories.length * HISTORY_CONDITIONS.length * n +        // history main calls
+    probeCalls * HISTORY_CONDITIONS.length * n +              // probe calls
+    histories.length;                                         // one distill call each
   assert.equal(r.projection.projected_live_calls, expected);
   assert.ok(r.projection.projected_input_tokens_estimate > 0);
   assert.ok(r.projection.projected_input_cost > 0);
